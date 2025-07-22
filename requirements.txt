@@ -1,0 +1,13 @@
+streamlit
+openai
+pyrit==0.8.1
+ipykernel
+dotenv
+#playwright==@1.51.0
+flask
+fastapi
+uvicorn
+httpx
+azure-ai-evaluation[redteam]
+azure-ai-projects
+semantic-kernel
