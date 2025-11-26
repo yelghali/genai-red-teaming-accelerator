@@ -1444,6 +1444,5 @@ This workshop covered:
 
 - [PyRIT GitHub Repository](https://github.com/Azure/PyRIT)
 - [OWASP LLM Top 10](https://owasp.org/www-project-top-10-for-large-language-model-applications/)
-- [Microsoft AI Red Team](https://www.microsoft.com/security/blog/ai-red-team/)
 - [NIST AI Risk Management Framework](https://www.nist.gov/itl/ai-risk-management-framework)
 
