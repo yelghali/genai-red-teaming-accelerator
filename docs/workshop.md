@@ -158,7 +158,6 @@ This lab setup has two parts:
 | **B: Codespaces** | Quick trials, remote work | GitHub account | 3-5 min |
 | **C: Manual Python** | Advanced users, no Docker | Python 3.11+ | 10-15 min |
 
----
 
 ### Option A: DevContainer (Recommended)
 
@@ -197,7 +196,7 @@ python -c "import pyrit; print(f'PyRIT {pyrit.__version__}')"  # Should show 0.8
 playwright --version  # Should show version 1.x
 ```
 
----
+
 
 ### Option B: GitHub Codespaces
 
@@ -211,7 +210,7 @@ playwright --version  # Should show version 1.x
 
 Same environment as DevContainer, but runs in the cloud. Includes 60 free hours/month.
 
----
+
 
 ### Option C: Manual Python Setup
 
@@ -240,7 +239,7 @@ playwright install --with-deps chromium
 python -m ipykernel install --user --name=pyrit_kernel
 ```
 
----
+
 
 ### Configure Azure OpenAI (All Options)
 
