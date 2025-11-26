@@ -25,9 +25,7 @@ tags: ai, red teaming, security, prompt injection          # Required. Tags for 
 
 # AI Red Teaming Workshop
 
-This is a hands-on guide to security testing GenAI applications using PyRIT.
-
-This workshop guides you through a hands-on learning path:
+This is a hands-on guide to security testing GenAI applications using PyRIT. You will learn to : 
 
 * Understand concepts: Learn AI red teaming fundamentals and attack surfaces
 
