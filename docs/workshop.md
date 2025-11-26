@@ -140,307 +140,162 @@ Web pages, mobile apps, chat widgets. Vulnerabilities include:
 
 ## 3. Lab Setup
 
+This lab setup has two parts:
+1. **Choose your environment** - Pick one setup method (A, B, or C)
+2. **Configure Azure OpenAI** - Common step for all methods
+
 ### Prerequisites
 
 - **Git** - For cloning the repository
 - **Azure OpenAI** - API access with a GPT-4 or GPT-4o deployment
-- Choose your development environment:
-  - **VS Code + Docker Desktop** (Recommended - DevContainer)
-  - **GitHub account** (Codespaces - cloud-based)
-  - **Python 3.11+** (Manual setup - no containers)
+- Choose **one** development environment below
 
-### Setup Comparison
+### Environment Setup Options
 
-| Method | Pros | Cons | Best For |
-|--------|------|------|----------|
-| **DevContainer** ✅ | Consistent environment, local control, fast iteration | Requires Docker (~4GB disk) | Most developers |
-| **Codespaces** | Zero local setup, works anywhere | Requires internet, uses GitHub minutes | Quick trials, remote work |
-| **Manual** | Full control, no Docker | Complex setup, platform-specific issues | Advanced users |
+| Method | Best For | Requirements | Setup Time |
+|--------|----------|--------------|------------|
+| **A: DevContainer** ✅ | Most developers | VS Code + Docker Desktop | 5-10 min |
+| **B: Codespaces** | Quick trials, remote work | GitHub account | 3-5 min |
+| **C: Manual Python** | Advanced users, no Docker | Python 3.11+ | 10-15 min |
 
+---
 
+### Option A: DevContainer (Recommended)
 
-### Option A: VS Code DevContainer (Recommended)
+**Benefits:** Consistent environment, pre-configured dependencies, fast local iteration
 
-**Why DevContainers?**
-- ✅ **Consistent environment** across all team members
-- ✅ **Pre-configured** Python, PyRIT, Playwright, and all dependencies
-- ✅ **Isolated** from your local Python installations
-- ✅ **Fast** - runs locally, no network latency
-- ✅ **Reproducible** - same environment every time
+**1. Install Prerequisites**
 
-##### Step 1: Install Prerequisites
+- [Docker Desktop](https://docker.com/products/docker-desktop) - Ensure it's running
+- [Visual Studio Code](https://code.visualstudio.com/)
+- Dev Containers extension (Install from VS Code: `Ctrl+Shift+X` → search "Dev Containers")
 
-1. **Install Docker Desktop**
-   - Windows/Mac: Download from [docker.com/products/docker-desktop](https://docker.com/products/docker-desktop)
-   - Linux: Follow [docs.docker.com/engine/install](https://docs.docker.com/engine/install/)
-   - **Important**: Ensure Docker Desktop is running before proceeding
-
-2. **Install Visual Studio Code**
-   - Download from [code.visualstudio.com](https://code.visualstudio.com/)
-
-3. **Install Dev Containers Extension**
-   - Open VS Code
-   - Press `Ctrl+Shift+X` (or `Cmd+Shift+X` on Mac)
-   - Search for "Dev Containers"
-   - Click **Install** on the extension by Microsoft
-
-##### Step 2: Clone and Open Repository
+**2. Clone and Open**
 
 ```bash
-# Clone the repository
 git clone https://github.com/yelghali/genai-red-teaming-accelerator.git
 cd genai-red-teaming-accelerator
-
-# Open in VS Code
 code .
 ```
 
-##### Step 3: Reopen in Container
+**3. Reopen in Container**
 
-When VS Code opens, you'll see a notification:
+Click **"Reopen in Container"** when prompted, or press `F1` → "Dev Containers: Reopen in Container"
 
-```
-┌────────────────────────────────────────────────────────────┐
-│ Folder contains a Dev Container configuration file.        │
-│                                                            │
-│ [Reopen in Container]  [Clone in Volume]  [Don't Show]    │
-└────────────────────────────────────────────────────────────┘
-```
+First build takes 5-10 minutes and installs:
+- Python 3.11, PyRIT 0.8.1, Playwright, Jupyter
+- All dependencies from `requirements.txt`
+- VS Code extensions for Python/Jupyter
 
-Click **"Reopen in Container"**
+**4. Verify Installation**
 
-**Alternative methods:**
-- Press `F1` or `Ctrl+Shift+P` → type "Dev Containers: Reopen in Container"
-- Click the green button in bottom-left corner → "Reopen in Container"
-
-##### Step 4: Wait for Container Build
-
-First-time setup takes ~5-10 minutes. VS Code will show progress:
-
-```
-Building Dev Container...
-[1/8] Installing system packages...
-[2/8] Setting up Python 3.11...
-[3/8] Installing PyRIT and dependencies...
-[4/8] Installing Playwright browsers...
-[5/8] Configuring Jupyter kernel...
-[6/8] Setting up Git...
-[7/8] Installing VS Code extensions...
-[8/8] Starting container...
-```
-
-**What gets installed:**
-- Python 3.11
-- PyRIT 0.8.1
-- Playwright with Chromium browser
-- Flask, FastAPI, uvicorn
-- Azure OpenAI SDK
-- Jupyter kernel for notebooks
-- VS Code extensions: Python, Jupyter, Pylance
-
-##### Step 5: Verify Setup
-
-Once the container is running, open a terminal in VS Code (`Ctrl+`` or View → Terminal`):
+Open terminal in VS Code (`Ctrl+``) and run:
 
 ```bash
-# Check Python version
-python --version
-# Expected: Python 3.11.x
-
-# Check PyRIT installation
-python -c "import pyrit; print(f'PyRIT {pyrit.__version__}')"
-# Expected: PyRIT 0.8.1
-
-# Check Playwright
-playwright --version
-# Expected: Version 1.x.x
-
-# List installed packages
-pip list | grep -E "pyrit|playwright|openai|flask|fastapi"
+python --version  # Should show Python 3.11.x
+python -c "import pyrit; print(f'PyRIT {pyrit.__version__}')"  # Should show 0.8.1
+playwright --version  # Should show version 1.x
 ```
 
-##### DevContainer Features
+---
 
-The DevContainer includes:
+### Option B: GitHub Codespaces
 
-**Automatic Port Forwarding:**
-- When you start the demo apps on ports 8000/5000, VS Code automatically forwards them
-- Access via `http://localhost:8000` in your browser
+**Benefits:** Zero local setup, works anywhere with internet
 
-**Persistent Storage:**
-- Your code changes persist outside the container
-- PyRIT databases and logs are saved locally
-- `.env` file is preserved
+**Steps:**
 
-**VS Code Extensions:**
-- Python debugging
-- Jupyter notebook support
-- Git integration
-- Linting and formatting
+1. Go to [github.com/yelghali/genai-red-teaming-accelerator](https://github.com/yelghali/genai-red-teaming-accelerator)
+2. Click **Code** → **Codespaces** → **Create codespace on main**
+3. Wait 3-5 minutes for automatic setup
 
-##### Rebuilding the Container
+Same environment as DevContainer, but runs in the cloud. Includes 60 free hours/month.
 
-If you need to rebuild (e.g., after updating dependencies):
+---
 
-1. Press `F1` or `Ctrl+Shift+P`
-2. Type "Dev Containers: Rebuild Container"
-3. Select **Rebuild Container** or **Rebuild Without Cache**
+### Option C: Manual Python Setup
 
-##### Troubleshooting DevContainer
-
-**Docker Desktop not running:**
-```
-Error: Cannot connect to Docker daemon
-Solution: Start Docker Desktop and wait for it to be ready
-```
-
-**Insufficient disk space:**
-```
-Error: No space left on device
-Solution: Free up at least 5GB, or use "Docker → Preferences → Resources" to increase
-```
-
-**Container fails to build:**
-```bash
-# View detailed build logs
-F1 → "Dev Containers: Show Container Log"
-
-# Try rebuilding without cache
-F1 → "Dev Containers: Rebuild Without Cache and Reopen in Container"
-```
-
-**Port already in use:**
-```bash
-# Inside container terminal, find and kill process
-lsof -ti:8000 | xargs kill -9
-lsof -ti:5000 | xargs kill -9
-```
-
-
-### Option B: GitHub Codespaces (Cloud-Based)
-
-**When to use Codespaces:**
-- You don't want to install Docker locally
-- Working from multiple machines
-- Need a quick demo environment
-- Have limited local resources
-
-**Note:** Codespaces uses GitHub-provided compute (60 hours/month free for personal accounts).
-
-##### Steps:
-
-1. Navigate to the repository on GitHub
-2. Click the green **Code** button
-3. Select the **Codespaces** tab
-4. Click **Create codespace on main**
-5. Wait for the environment to build (~3-5 minutes)
-
-**What gets installed automatically:**
-- Python 3.11 with Jupyter kernel
-- PyRIT and all dependencies  
-- Playwright with Chromium browser
-- Azure CLI
-- Same configuration as DevContainer
-
-**Port Forwarding:**
-GitHub Codespaces automatically forwards ports 8000 and 5000. When you start the demo apps, you'll see a notification with a link to access them.
-
-
-### Option C: Manual Local Setup (No Docker)
-
-For systems without Docker or when you need direct control.
+**Benefits:** Full control, no Docker required
 
 ```bash
 # 1. Clone repository
 git clone https://github.com/yelghali/genai-red-teaming-accelerator.git
 cd genai-red-teaming-accelerator
 
-# 2. Create and activate virtual environment
+# 2. Create virtual environment
 python3.11 -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
-# 3. Upgrade pip
+# Windows:
+.venv\Scripts\activate
+
+# macOS/Linux:
+source .venv/bin/activate
+
+# 3. Install dependencies
 pip install --upgrade pip
-
-# 4. Install all dependencies
 pip install -r requirements.txt
-
-# 5. Install Playwright browsers with system dependencies
 playwright install --with-deps chromium
 
-# 6. (Optional) Install Jupyter kernel for notebooks
+# 4. (Optional) Jupyter kernel
 python -m ipykernel install --user --name=pyrit_kernel
 ```
 
-#### Configure Azure OpenAI Credentials
+---
 
-**Step 1:** Copy the example environment file:
+### Configure Azure OpenAI (All Options)
+
+**This step is required regardless of which environment option you chose.**
+
+**1. Copy the environment template**
 
 ```bash
 cp code/.env.example code/.env
 ```
 
-**Step 2:** Edit `code/.env` with your Azure OpenAI values:
+**2. Get your Azure OpenAI credentials**
+
+Go to [Azure Portal](https://portal.azure.com) → Your Azure OpenAI resource:
+- Click **Keys and Endpoint** → Copy **KEY 1** and **Endpoint**
+- Click **Model deployments** → Note your deployment name (e.g., `gpt-4o`)
+
+**3. Edit `code/.env` with your values**
 
 ```env
-# Full chat completions endpoint URL
-# Format: https://<resource>.openai.azure.com/openai/deployments/<deployment>/chat/completions
+# Full chat endpoint URL
 OPENAI_CHAT_ENDPOINT="https://your-resource.openai.azure.com/openai/deployments/gpt-4o/chat/completions"
 
-# Your Azure OpenAI API key (from Azure Portal → Keys and Endpoint)
+# API key from Azure Portal
 OPENAI_CHAT_API_KEY="your-api-key-here"
 
-# Your deployment name (e.g., gpt-4, gpt-4o, gpt-35-turbo)
+# Deployment name
 OPENAI_CHAT_MODEL="gpt-4o"
 
-# Base endpoint (without the /openai/deployments/... path)
+# Base endpoint (no /openai/deployments path)
 AZURE_OPENAI_ENDPOINT="https://your-resource.openai.azure.com/"
 
 # API version
 AZURE_OPENAI_API_VERSION="2025-01-01-preview"
 ```
 
-**Where to find these values:**
-1. Go to [Azure Portal](https://portal.azure.com)
-2. Navigate to your **Azure OpenAI resource**
-3. Click **Keys and Endpoint** in the left menu
-4. Copy **KEY 1** → paste as `OPENAI_CHAT_API_KEY`
-5. Copy **Endpoint** → use as base for both endpoint variables
-6. Go to **Model deployments** → note your deployment name → use as `OPENAI_CHAT_MODEL`
-
-#### Verify Setup
-
-Run these commands to verify everything is working:
+**4. Verify configuration**
 
 ```bash
-# 1. Check Python version (should be 3.11+)
-python --version
-
-# 2. Check PyRIT is installed
-python -c "import pyrit; print(f'✓ PyRIT {pyrit.__version__} installed')"
-
-# 3. Check Playwright is installed
-playwright --version
-
-# 4. Verify environment file exists and has required variables
+python --version  # Should be 3.11+
+python -c "import pyrit; print(f'✓ PyRIT {pyrit.__version__}')"
 python -c "
 from dotenv import load_dotenv
 import os
 load_dotenv('code/.env')
-required = ['OPENAI_CHAT_ENDPOINT', 'OPENAI_CHAT_API_KEY', 'OPENAI_CHAT_MODEL', 'AZURE_OPENAI_ENDPOINT']
+required = ['OPENAI_CHAT_ENDPOINT', 'OPENAI_CHAT_API_KEY', 'OPENAI_CHAT_MODEL']
 missing = [v for v in required if not os.getenv(v)]
-if missing:
-    print(f'✗ Missing variables: {missing}')
-else:
-    print('✓ All environment variables configured')
+print('✓ All environment variables configured' if not missing else f'✗ Missing: {missing}')
 "
 ```
 
 **Expected output:**
 ```
 Python 3.11.x
-✓ PyRIT 0.8.1 installed
-Version 1.51.0
+✓ PyRIT 0.8.1
 ✓ All environment variables configured
 ```
 
