@@ -239,8 +239,6 @@ playwright install --with-deps chromium
 python -m ipykernel install --user --name=pyrit_kernel
 ```
 
-
-
 ### Configure Azure OpenAI (All Options)
 
 **This step is required regardless of which environment option you chose.**
@@ -299,6 +297,7 @@ Python 3.11.x
 ```
 
 ---
+
 
 ## 4. Module 1: Demo Target Applications
 
