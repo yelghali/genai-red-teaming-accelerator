@@ -1,0 +1,2 @@
+# Don't ignore the config file - it should be version controlled
+!pyrit_config.yml

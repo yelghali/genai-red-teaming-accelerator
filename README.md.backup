@@ -1,0 +1,106 @@
+# GenAI Red Teaming Accelerator
+
+A comprehensive framework for security testing GenAI applications using [PyRIT (Python Risk Identification Tool)](https://github.com/Azure/PyRIT). This accelerator provides:
+
+- **Interactive Notebooks**: Learn and experiment with PyRIT orchestrators
+- **Non-Interactive Scanning**: Automated security testing scripts
+- **CI/CD Integration**: GitHub Actions for continuous security validation
+- **Demo Applications**: Ready-to-use HTTP API and web app targets
+
+## Quick Start
+
+See [QUICK_START.md](QUICK_START.md) for detailed setup and usage instructions.
+
+```bash
+# 1. Configure environment
+cp code/.env.example code/.env
+# Edit .env with your Azure OpenAI credentials
+
+# 2. Start demo applications
+cd code/demo_target_apps
+python run_demo_apps.py
+
+# 3. Test with notebooks
+cd code/notebooks
+# Open api_target.ipynb or playwright_target.ipynb
+
+# 4. Run non-interactive scan
+cd code/scan
+python run_pyrit_scan.py
+```
+
+## Project Structure
+
+```
+code/
+├── .env               # Shared environment variables
+├── notebooks/         # Interactive testing
+│   ├── api_target.ipynb
+│   ├── playwright_target.ipynb
+│   └── red_teaming_agent.ipynb
+├── scan/              # Non-interactive scanning
+│   ├── run_pyrit_scan.py
+│   ├── config.py
+│   └── scorers/
+└── demo_target_apps/  # Demo applications
+    ├── http_api_app.py
+    ├── playwright_web_app.py
+    └── run_demo_apps.py
+```
+
+## Features
+
+### PyRIT Orchestrators
+
+- **PromptSendingOrchestrator**: Send individual prompts
+- **RedTeamingOrchestrator**: Automated red teaming with objectives
+- **PAIROrchestrator**: Prompt Automatic Iterative Refinement
+- **CrescendoOrchestrator**: Gradual jailbreak attempts
+
+### Targets
+
+- **HTTP API**: Test REST APIs with custom requests
+- **Playwright**: Browser automation for web applications
+- **Azure AI Project**: Integration with Azure AI services
+
+### GitHub Actions
+
+Automated scanning with:
+- Manual workflow dispatch
+- Scheduled runs (daily at 2 AM UTC)
+- Automatic on file changes
+
+## Requirements
+
+- Python 3.11+
+- Azure OpenAI account with deployment
+- Docker (optional, for containerized scans)
+- Playwright (`playwright install chromium`)
+
+## Documentation
+
+- [QUICK_START.md](QUICK_START.md) - Getting started guide
+- [docs/workshop.md](docs/workshop.md) - Detailed workshop
+- [code/demo_target_apps/README.md](code/demo_target_apps/README.md) - Demo apps documentation
+
+## Contributing
+
+This project welcomes contributions and suggestions.  Most contributions require you to agree to a
+Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
+the rights to use your contribution. For details, visit https://cla.opensource.microsoft.com.
+
+When you submit a pull request, a CLA bot will automatically determine whether you need to provide
+a CLA and decorate the PR appropriately (e.g., status check, comment). Simply follow the instructions
+provided by the bot. You will only need to do this once across all repos using our CLA.
+
+This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
+For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
+contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
+
+## Trademarks
+
+This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft 
+trademarks or logos is subject to and must follow 
+[Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general).
+Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship.
+Any use of third-party trademarks or logos are subject to those third-party's policies.

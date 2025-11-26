@@ -1,0 +1,83 @@
+name: 'PyRIT Security Scan'
+description: 'Run AI security testing scans using PyRIT framework on HTTP APIs or web applications'
+author: 'Microsoft'
+
+branding:
+  icon: 'shield'
+  color: 'red'
+
+inputs:
+  azure-openai-endpoint:
+    description: 'Azure OpenAI endpoint (e.g., https://your-resource.openai.azure.com/)'
+    required: true
+  azure-openai-key:
+    description: 'Azure OpenAI API key'
+    required: true
+  azure-openai-deployment:
+    description: 'Azure OpenAI deployment/model name'
+    required: true
+  results-path:
+    description: 'Path to store scan results'
+    required: false
+    default: 'results'
+
+outputs:
+  scan-status:
+    description: 'Status of the scan (success/failure)'
+    value: ${{ steps.scan.outputs.status }}
+  results-path:
+    description: 'Path to scan results artifacts'
+    value: ${{ inputs.results-path }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Display configuration
+      shell: bash
+      run: |
+        echo "PyRIT Scan Configuration:"
+        echo "========================="
+        cat code/scan/config.py
+        echo "========================="
+    
+    - name: Create .env file
+      shell: bash
+      run: |
+        echo "Creating .env file from GitHub secrets"
+        cat > code/scan/.env << 'EOF'
+        OPENAI_CHAT_ENDPOINT=${{ inputs.azure-openai-endpoint }}/openai/deployments/${{ inputs.azure-openai-deployment }}/chat/completions
+        OPENAI_CHAT_API_KEY=${{ inputs.azure-openai-key }}
+        OPENAI_CHAT_MODEL=${{ inputs.azure-openai-deployment }}
+        AZURE_OPENAI_ENDPOINT=${{ inputs.azure-openai-endpoint }}/
+        AZURE_OPENAI_API_VERSION=2025-01-01-preview
+        EOF
+        echo "✓ .env file created"
+    
+    - name: Build Docker image
+      shell: bash
+      run: |
+        docker build -f Dockerfile.pyrit-scan -t pyrit-scanner:${{ github.run_number || 'latest' }} .
+    
+    - name: Run PyRIT scan
+      id: scan
+      shell: bash
+      run: |
+        set +e
+        docker run \
+          --name pyrit-scan-${{ github.run_number || github.sha }} \
+          -v $(pwd)/code/scan/config.py:/app/code/scan/config.py:ro \
+          -v $(pwd)/code/scan/.env:/app/code/scan/.env:ro \
+          -v $(pwd)/code/scan/scorers:/app/code/scan/scorers:ro \
+          -v $(pwd)/${{ inputs.results-path }}:/app/results \
+          pyrit-scanner:${{ github.run_number || 'latest' }} 2>&1 | tee scan_output.log
+        
+        SCAN_EXIT_CODE=$?
+        
+        if [ $SCAN_EXIT_CODE -eq 0 ]; then
+          echo "status=success" >> $GITHUB_OUTPUT
+          echo "✓ Scan completed successfully"
+        else
+          echo "status=failure" >> $GITHUB_OUTPUT
+          echo "❌ Scan failed with exit code $SCAN_EXIT_CODE"
+          exit $SCAN_EXIT_CODE
+        fi

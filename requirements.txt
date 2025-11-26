@@ -2,7 +2,7 @@ streamlit
 openai
 pyrit==0.8.1
 ipykernel
-dotenv
+python-dotenv
 #playwright==@1.51.0
 flask
 fastapi

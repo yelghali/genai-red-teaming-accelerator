@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  # Demo target applications
+  demo-apps:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: demo-target-apps
+    ports:
+      - "8000:8000"
+      - "5000:5000"
+    environment:
+      - AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT}
+      - OPENAI_CHAT_API_KEY=${OPENAI_CHAT_API_KEY}
+      - OPENAI_CHAT_MODEL=${OPENAI_CHAT_MODEL}
+      - AZURE_OPENAI_API_VERSION=${AZURE_OPENAI_API_VERSION:-2025-01-01-preview}
+    networks:
+      - pyrit-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # PyRIT scanner
+  pyrit-scanner:
+    build:
+      context: ../..
+      dockerfile: Dockerfile.pyrit-scan
+    container_name: pyrit-scanner
+    depends_on:
+      demo-apps:
+        condition: service_healthy
+    volumes:
+      - ../scan/config.py:/app/code/scan/config.py:ro
+      - ../scan/scorers:/app/code/scan/scorers:ro
+      - ../../results:/app/results
+      - ../.env:/app/code/.env:ro
+    networks:
+      - pyrit-network
+    environment:
+      - OPENAI_CHAT_ENDPOINT=${OPENAI_CHAT_ENDPOINT}
+      - OPENAI_CHAT_API_KEY=${OPENAI_CHAT_API_KEY}
+      - OPENAI_CHAT_MODEL=${OPENAI_CHAT_MODEL}
+      - AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT}
+      - AZURE_OPENAI_API_VERSION=${AZURE_OPENAI_API_VERSION:-2025-01-01-preview}
+
+networks:
+  pyrit-network:
+    driver: bridge

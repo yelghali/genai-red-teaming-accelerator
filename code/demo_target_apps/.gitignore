@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# Environment files
+.env
+.env.scan
+
+# Conversation data
+conversations.json
+
+# Results
+results/
+*.log

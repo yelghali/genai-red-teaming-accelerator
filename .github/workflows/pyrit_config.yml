@@ -1,0 +1,77 @@
+# PyRIT Scan Configuration
+# This file defines the parameters for running PyRIT security scans
+
+# ============================================================================
+# TARGET CONFIGURATION
+# ============================================================================
+
+# Target type to scan: "http", "playwright", or "both"
+target_type: "http"
+
+# ============================================================================
+# ORCHESTRATOR CONFIGURATION
+# ============================================================================
+
+# Orchestrator(s) to use - can be a single value or list
+# Options: "prompt_sending", "red_teaming", "pair", "crescendo"
+orchestrator: "crescendo"
+# For multiple orchestrators, use:
+# orchestrator:
+#   - "crescendo"
+#   - "pair"
+
+# ============================================================================
+# HTTP TARGET CONFIGURATION
+# ============================================================================
+
+http:
+  # Raw HTTP request template
+  # {PROMPT} and {CONVERSATION_ID} will be replaced automatically
+  raw_request: |
+    POST http://127.0.0.1:8000/chat
+    Content-Type: application/json
+    
+    {
+        "user_prompt": "{PROMPT}",
+        "conversation_id": "{CONVERSATION_ID}"
+    }
+  
+  # Alternative: Just provide endpoint URL (simple mode)
+  # If raw_request is provided, this is ignored
+  endpoint: "http://127.0.0.1:8000/chat"
+  
+  # JSON path to extract response from API
+  response_json_path: "choices[0].message.content"
+  
+  # Request timeout in seconds
+  timeout: 20.0
+  
+  # Use TLS/HTTPS
+  use_tls: false
+
+# ============================================================================
+# PLAYWRIGHT TARGET CONFIGURATION
+# ============================================================================
+
+playwright:
+  url: "http://127.0.0.1:5000"
+  headless: true
+  input_selector: "#message-input"
+  send_button_selector: "#send-button"
+  bot_message_selector: ".bot-message"
+
+# ============================================================================
+# AZURE OPENAI CONFIGURATION
+# ============================================================================
+
+azure:
+  endpoint: "https://your-resource.openai.azure.com/"
+  api_version: "2025-01-01-preview"
+
+# ============================================================================
+# GENERAL CONFIGURATION
+# ============================================================================
+
+general:
+  scorer_yaml_path: "./scorers/check_fraud_classifier.yaml"
+  log_level: "WARNING"  # Options: "WARNING", "INFO", "DEBUG"
