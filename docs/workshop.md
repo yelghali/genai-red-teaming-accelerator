@@ -25,17 +25,17 @@ tags: ai, red teaming, security, prompt injection          # Required. Tags for 
 
 # AI Red Teaming Workshop
 
-This is a hands-on guide to security testing GenAI applications using PyRIT. You will learn to : 
+This is a hands-on guide to security testing GenAI applications using PyRIT. 
 
-* Understand concepts: Learn AI red teaming fundamentals and attack surfaces
 
-* Practice with examples: Run interactive notebooks against demo HTTP API and web chatbot targets
-
-* Explore attack strategies: Experiment with PyRIT tool and guided examples
-
-* Learn how to test your own apps with a simplified configuration
-
-* Automate security: Integrate scanning into CI/CD with Docker and GitHub Actions
+| Module | What You will learn|
+|--------|-----------------|
+| **Concepts** | AI red teaming fundamentals, attack surfaces |
+| **Demo Apps** | HTTP API and Web UI targets for testing |
+| **Notebooks** | Interactive exploration of PyRIT orchestrators |
+| **Scanning** | Automated, non-interactive security testing |
+| **Docker** | Containerized, portable scan execution |
+| **GitHub Actions** | CI/CD integration for continuous security |
 
 
 
