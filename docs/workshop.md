@@ -190,7 +190,7 @@ Web pages, mobile apps, chat widgets. Vulnerabilities include:
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/genai-red-teaming-accelerator.git
+git clone https://github.com/yelghali/genai-red-teaming-accelerator.git
 cd genai-red-teaming-accelerator
 
 # Open in VS Code
@@ -354,7 +354,7 @@ For systems without Docker or when you need direct control.
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/your-org/genai-red-teaming-accelerator.git
+git clone https://github.com/yelghali/genai-red-teaming-accelerator.git
 cd genai-red-teaming-accelerator
 
 # 2. Create and activate virtual environment
@@ -1416,7 +1416,7 @@ jobs:
       # Clone the red teaming accelerator
       - name: Clone PyRIT Scanner
         run: |
-          git clone https://github.com/your-org/genai-red-teaming-accelerator.git scanner
+          git clone https://github.com/yelghali/genai-red-teaming-accelerator.git scanner
       
       # Copy your custom config
       - name: Configure scan
@@ -1462,7 +1462,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          repository: your-org/genai-red-teaming-accelerator
+          repository: yelghali/genai-red-teaming-accelerator
       
       - name: Configure for staging environment
         run: |
