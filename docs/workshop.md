@@ -1,8 +1,8 @@
 ---
 published: true                        # Optional. Set to true to publish the workshop (default: false)
 type: workshop                          # Required.
-title: Azure Red Teaming accelerateur            # Required. Full title of the workshop
-short_title: Azure Red Teaming accelerateur      # Optional. Short title displayed in the header
+title: Azure AI Red Teaming accelerateur            # Required. Full title of the workshop
+short_title: Azure AI Red Teaming accelerateur      # Optional. Short title displayed in the header
 description: This is a workshop intends to help you get started with red teaming with guided examples first ; then how to test red teaming on your own applications.  # Required.
 level: beginner                         # Required. Can be 'beginner', 'intermediate' or 'advanced'
 authors:                                # Required. You can add as many authors as needed      
