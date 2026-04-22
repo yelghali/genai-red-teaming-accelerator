@@ -5,33 +5,32 @@ Cloud-based red teaming scans for AI models using Azure AI Foundry's OpenAI Eval
 ## Quick Start
 
 ```bash
-pip install "azure-ai-projects>=2.0.0" azure-identity
+pip install -r requirements.txt
 az login
 
-# Scan deployed GPT + Mistral models (easy difficulty)
-python cloud_scan.py --difficulty easy --no-wait
+# 1. Copy and fill env vars
+cp .env.sample .env
+# Edit .env with your Foundry project endpoint and model deployment names
 
-# Scan specific models
+# 2. Run scans
+python cloud_scan.py                                          # uses .env defaults
 python cloud_scan.py --models gpt-5-1 gpt-5-3 --difficulty moderate
-
-# Scan all models including Claude (needs quota)
-python cloud_scan.py --all --difficulty all --no-wait
-
-# Wait for results
+python cloud_scan.py --difficulty all --no-wait                # fire-and-forget
 python cloud_scan.py --models gpt-5-1 --difficulty easy --timeout 45
 ```
 
-## Parameters
+## Configuration
 
-| Flag | Env Var | Default | Description |
-|------|---------|---------|-------------|
-| `--models` | `RED_TEAM_MODELS` (comma-sep) | GPT + Mistral | Deployment names to scan |
-| `--difficulty` | `RED_TEAM_DIFFICULTY` | `easy` | `easy`/`moderate`/`difficult`/`all` |
-| `--num-turns` | `RED_TEAM_NUM_TURNS` | `1` | Simulation rounds per attack |
-| `--timeout` | `RED_TEAM_TIMEOUT_MINUTES` | `30` | Poll timeout in minutes |
-| `--endpoint` | `AZURE_AI_PROJECT_ENDPOINT` | (hardcoded) | Foundry project endpoint |
-| `--all` | — | — | Scan all 7 models |
-| `--no-wait` | — | — | Don't poll for completion |
+All configuration is via environment variables (see [.env.sample](.env.sample)) or CLI flags.
+
+| Flag | Env Var | Required | Default | Description |
+|------|---------|----------|---------|-------------|
+| `--endpoint` | `AZURE_AI_PROJECT_ENDPOINT` | **Yes** | — | `https://<account>.services.ai.azure.com/api/projects/<project>` |
+| `--models` | `RED_TEAM_MODELS` | **Yes** | — | Comma-separated deployment names |
+| `--difficulty` | `RED_TEAM_DIFFICULTY` | No | `easy` | `easy` / `moderate` / `difficult` / `all` |
+| `--num-turns` | `RED_TEAM_NUM_TURNS` | No | `1` | Simulation rounds per attack |
+| `--timeout` | `RED_TEAM_TIMEOUT_MINUTES` | No | `30` | Poll timeout in minutes |
+| `--no-wait` | — | No | — | Don't poll for completion |
 
 ## Difficulty Levels
 
@@ -42,19 +41,14 @@ python cloud_scan.py --models gpt-5-1 --difficulty easy --timeout 45
 | `difficult` | Crescendo, Multiturn | Multi-step attacks |
 | `all` | Base64, Flip, Morse, Tense | Combined easy + moderate |
 
-## Models
+## Supported Models
 
-| Deployment | Model | Cloud Scan | Notes |
-|-----------|-------|-----------|-------|
-| `gpt-5-1` | GPT 5.1 | ✅ | OpenAI-compatible |
-| `gpt-5-3` | GPT 5.3 | ✅ | OpenAI-compatible |
-| `gpt-5-4` | GPT 5.4 | ✅ | OpenAI-compatible |
-| `mistral-document-ai` | Mistral Document AI | ❌ | Azure AI Inference API — not supported by `azure_ai_model` target |
-| `claude-sonnet-4-5` | Claude Sonnet 4.5 | ❌ | Needs quota + not OpenAI-compatible |
-| `claude-haiku-4-5` | Claude Haiku 4.5 | ❌ | Needs quota + not OpenAI-compatible |
-| `claude-sonnet-4-6` | Claude Sonnet 4.6 | ❌ | Needs quota + not OpenAI-compatible |
+Only **OpenAI-compatible** deployments work with the cloud `azure_ai_model` target.
 
-> **Note:** Cloud red teaming's `azure_ai_model` target only works with OpenAI-compatible deployments (GPT models). Mistral and Claude use Azure AI Inference API and complete with 0 results. To scan non-OpenAI models, use the local `RedTeam` SDK (`azure-ai-evaluation[redteam]`) with a callback target.
+| Target Type | Examples | Supported |
+|------------|---------|-----------|
+| OpenAI / GPT | gpt-5-1, gpt-5-3, gpt-5-4, gpt-4o | ✅ |
+| Azure AI Inference (Mistral, Claude) | mistral-document-ai, claude-* | ❌ (completes with 0 results) |
 
 ## Safety Evaluators
 
@@ -64,14 +58,4 @@ python cloud_scan.py --models gpt-5-1 --difficulty easy --timeout 45
 
 - Saved to `results/` as JSON
 - Visible in [Foundry portal](https://ai.azure.com) → **Evaluations > Red team** tab
-- Each eval groups runs per model with ASR (Attack Success Rate) metrics
-
-## Azure Resources
-
-| Resource | Name | Region |
-|----------|------|--------|
-| AI Services | `my-foundry-yaya` | Sweden Central |
-| Project | `proj-default` | Sweden Central |
-| Resource Group | `foundry` | — |
-
-The key metric is **Attack Success Rate (ASR)** — the percentage of attacks that successfully elicit undesirable responses.
+- Key metric: **Attack Success Rate (ASR)** — percentage of attacks that elicit undesirable responses

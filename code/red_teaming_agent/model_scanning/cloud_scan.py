@@ -32,35 +32,18 @@ from azure.identity import DefaultAzureCredential
 from azure.ai.projects import AIProjectClient
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Configuration
+# Configuration — all values from env vars (see .env.sample)
 # ──────────────────────────────────────────────────────────────────────────────
 
-AZURE_AI_PROJECT_ENDPOINT = os.environ.get(
-    "AZURE_AI_PROJECT_ENDPOINT",
-    "https://my-foundry-yaya.services.ai.azure.com/api/projects/proj-default"
-)
+AZURE_AI_PROJECT_ENDPOINT = os.environ.get("AZURE_AI_PROJECT_ENDPOINT", "")
 
 NUM_TURNS = int(os.environ.get("RED_TEAM_NUM_TURNS", "1"))
 TIMEOUT_MINUTES = int(os.environ.get("RED_TEAM_TIMEOUT_MINUTES", "30"))
 
-# Deployed models — override with RED_TEAM_MODELS env var (comma-separated deployment names)
-# NOTE: azure_ai_model target only works with OpenAI-compatible deployments (GPT models).
-#       Mistral and Claude use Azure AI Inference API and are NOT supported by the cloud
-#       red teaming azure_ai_model target. They complete with 0 results.
-#       To scan non-OpenAI models, use the local scan (azure-ai-evaluation[redteam]) instead.
-DEFAULT_MODELS = {
-    "gpt-5-1": "GPT 5.1",
-    "gpt-5-3": "GPT 5.3",
-    "gpt-5-4": "GPT 5.4",
-}
-
-# Non-OpenAI models — NOT supported by cloud azure_ai_model target (listed for reference)
-UNSUPPORTED_MODELS = {
-    "mistral-document-ai": "Mistral Document AI (Azure AI Inference — not OpenAI-compatible)",
-    "claude-sonnet-4-5": "Claude Sonnet 4.5 (needs quota + not OpenAI-compatible)",
-    "claude-haiku-4-5": "Claude Haiku 4.5 (needs quota + not OpenAI-compatible)",
-    "claude-sonnet-4-6": "Claude Sonnet 4.6 (needs quota + not OpenAI-compatible)",
-}
+# Models to scan — set RED_TEAM_MODELS env var (comma-separated deployment names)
+# or pass --models on CLI. Only OpenAI-compatible deployments are supported.
+# Non-OpenAI models (Mistral, Claude) use Azure AI Inference API and are NOT
+# supported by the cloud azure_ai_model target (they complete with 0 results).
 
 # Safety evaluators (matching the working manual scan exactly)
 TESTING_CRITERIA = [
@@ -152,8 +135,7 @@ def wait_for_runs(client, eval_id: str, run_ids: list, timeout_minutes: int = 30
 def main():
     parser = argparse.ArgumentParser(description="Cloud Red Teaming Scans for AI Models")
     parser.add_argument("--models", nargs="+", default=None,
-                        help=f"Deployment names. Available: {', '.join(DEFAULT_MODELS.keys())}")
-    parser.add_argument("--all", action="store_true", help="Scan all models")
+                        help="Deployment names to scan (env: RED_TEAM_MODELS, comma-separated)")
     parser.add_argument("--no-wait", action="store_true", help="Fire-and-forget")
     parser.add_argument("--difficulty", default=os.environ.get("RED_TEAM_DIFFICULTY", "easy"),
                         choices=["easy", "moderate", "difficult", "all"],
@@ -162,20 +144,27 @@ def main():
                         help=f"Simulation turns (default: {NUM_TURNS}, env: RED_TEAM_NUM_TURNS)")
     parser.add_argument("--timeout", type=int, default=TIMEOUT_MINUTES,
                         help=f"Timeout in minutes (default: {TIMEOUT_MINUTES})")
-    parser.add_argument("--endpoint", default=AZURE_AI_PROJECT_ENDPOINT)
+    parser.add_argument("--endpoint", default=AZURE_AI_PROJECT_ENDPOINT,
+                        help="Foundry project endpoint (env: AZURE_AI_PROJECT_ENDPOINT)")
     args = parser.parse_args()
 
-    # Allow env var override: RED_TEAM_MODELS=gpt-5-1,gpt-5-3
+    if not args.endpoint:
+        print("ERROR: AZURE_AI_PROJECT_ENDPOINT env var or --endpoint required.")
+        print("  Example: https://<account>.services.ai.azure.com/api/projects/<project>")
+        sys.exit(1)
+
+    # Resolve models: CLI --models > env RED_TEAM_MODELS > error
     env_models = os.environ.get("RED_TEAM_MODELS")
-    if args.all:
-        models_to_scan = DEFAULT_MODELS
-    elif args.models:
-        models_to_scan = {k: DEFAULT_MODELS.get(k, k) for k in args.models}
+    if args.models:
+        models_to_scan = {k: k for k in args.models}
     elif env_models:
-        keys = [m.strip() for m in env_models.split(",")]
-        models_to_scan = {k: DEFAULT_MODELS.get(k, k) for k in keys}
+        keys = [m.strip() for m in env_models.split(",") if m.strip()]
+        models_to_scan = {k: k for k in keys}
     else:
-        models_to_scan = dict(DEFAULT_MODELS)  # all GPT models by default
+        print("ERROR: No models specified. Set RED_TEAM_MODELS env var or use --models.")
+        print("  Example: RED_TEAM_MODELS=gpt-5-1,gpt-5-3,gpt-5-4")
+        print("  Or: python cloud_scan.py --models gpt-5-1 gpt-5-3")
+        sys.exit(1)
 
     if not models_to_scan:
         print("No models to scan. Use --models or --all.")
