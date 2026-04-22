@@ -44,15 +44,17 @@ python cloud_scan.py --models gpt-5-1 --difficulty easy --timeout 45
 
 ## Models
 
-| Deployment | Model | Status |
-|-----------|-------|--------|
-| `gpt-5-1` | GPT 5.1 | Deployed |
-| `gpt-5-3` | GPT 5.3 | Deployed |
-| `gpt-5-4` | GPT 5.4 | Deployed |
-| `mistral-document-ai` | Mistral Document AI | Deployed |
-| `claude-sonnet-4-5` | Claude Sonnet 4.5 | Needs quota |
-| `claude-haiku-4-5` | Claude Haiku 4.5 | Needs quota |
-| `claude-sonnet-4-6` | Claude Sonnet 4.6 | Needs quota |
+| Deployment | Model | Cloud Scan | Notes |
+|-----------|-------|-----------|-------|
+| `gpt-5-1` | GPT 5.1 | ✅ | OpenAI-compatible |
+| `gpt-5-3` | GPT 5.3 | ✅ | OpenAI-compatible |
+| `gpt-5-4` | GPT 5.4 | ✅ | OpenAI-compatible |
+| `mistral-document-ai` | Mistral Document AI | ❌ | Azure AI Inference API — not supported by `azure_ai_model` target |
+| `claude-sonnet-4-5` | Claude Sonnet 4.5 | ❌ | Needs quota + not OpenAI-compatible |
+| `claude-haiku-4-5` | Claude Haiku 4.5 | ❌ | Needs quota + not OpenAI-compatible |
+| `claude-sonnet-4-6` | Claude Sonnet 4.6 | ❌ | Needs quota + not OpenAI-compatible |
+
+> **Note:** Cloud red teaming's `azure_ai_model` target only works with OpenAI-compatible deployments (GPT models). Mistral and Claude use Azure AI Inference API and complete with 0 results. To scan non-OpenAI models, use the local `RedTeam` SDK (`azure-ai-evaluation[redteam]`) with a callback target.
 
 ## Safety Evaluators
 

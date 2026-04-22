@@ -44,14 +44,22 @@ NUM_TURNS = int(os.environ.get("RED_TEAM_NUM_TURNS", "1"))
 TIMEOUT_MINUTES = int(os.environ.get("RED_TEAM_TIMEOUT_MINUTES", "30"))
 
 # Deployed models — override with RED_TEAM_MODELS env var (comma-separated deployment names)
+# NOTE: azure_ai_model target only works with OpenAI-compatible deployments (GPT models).
+#       Mistral and Claude use Azure AI Inference API and are NOT supported by the cloud
+#       red teaming azure_ai_model target. They complete with 0 results.
+#       To scan non-OpenAI models, use the local scan (azure-ai-evaluation[redteam]) instead.
 DEFAULT_MODELS = {
     "gpt-5-1": "GPT 5.1",
     "gpt-5-3": "GPT 5.3",
     "gpt-5-4": "GPT 5.4",
-    "mistral-document-ai": "Mistral Document AI",
-    "claude-sonnet-4-5": "Claude Sonnet 4.5",
-    "claude-haiku-4-5": "Claude Haiku 4.5",
-    "claude-sonnet-4-6": "Claude Sonnet 4.6",
+}
+
+# Non-OpenAI models — NOT supported by cloud azure_ai_model target (listed for reference)
+UNSUPPORTED_MODELS = {
+    "mistral-document-ai": "Mistral Document AI (Azure AI Inference — not OpenAI-compatible)",
+    "claude-sonnet-4-5": "Claude Sonnet 4.5 (needs quota + not OpenAI-compatible)",
+    "claude-haiku-4-5": "Claude Haiku 4.5 (needs quota + not OpenAI-compatible)",
+    "claude-sonnet-4-6": "Claude Sonnet 4.6 (needs quota + not OpenAI-compatible)",
 }
 
 # Safety evaluators (matching the working manual scan exactly)
@@ -167,8 +175,7 @@ def main():
         keys = [m.strip() for m in env_models.split(",")]
         models_to_scan = {k: DEFAULT_MODELS.get(k, k) for k in keys}
     else:
-        models_to_scan = {k: v for k, v in DEFAULT_MODELS.items()
-                          if k.startswith("gpt-") or k.startswith("mistral-")}
+        models_to_scan = dict(DEFAULT_MODELS)  # all GPT models by default
 
     if not models_to_scan:
         print("No models to scan. Use --models or --all.")
