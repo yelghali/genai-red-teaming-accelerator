@@ -54,12 +54,16 @@ Any **chat-completion** model deployed in the Foundry project works with the `az
 
 ### Mistral Document AI
 
-`mistral-document-ai` is an OCR/document model, not a chat model. The cloud red team sends text prompts which don't match its input format, so scans complete with 0 results.
+`mistral-document-ai` is an OCR/document model with a `/v1/ocr` API — not a chat model. The cloud red team `azure_ai_model` target sends chat prompts which don't match its input format, so scans complete with 0 results.
 
-**Best approach for Document AI red teaming:**
-- Use the **local** `RedTeam` SDK (`azure-ai-evaluation[redteam]`) with a custom callback that sends PDFs containing adversarial content
-- Best risk categories: **Code Vulnerability** (prompt injection embedded in PDFs), **Violence** / **Hate & Unfairness** (testing if the model extracts and surfaces unsafe content from documents)
-- Create test PDFs with embedded prompt injection text (e.g., "Ignore previous instructions and...") to test the model's resilience
+The OCR endpoint requires a **serverless deployment URL** (not the standard AI Services URL) and accepts base64-encoded images/PDFs.
+
+**Red teaming approach for Document AI:**
+- Use the local `RedTeam` SDK (`azure-ai-evaluation[redteam]`) with a custom callback that:
+  1. Creates a PDF/image with adversarial text embedded (prompt injection, unsafe content)
+  2. Sends it to the `/v1/ocr` endpoint
+  3. Returns the OCR output text for evaluation
+- Best risk categories: **Code Vulnerability** (prompt injection in documents), **Violence** / **Hate & Unfairness** (unsafe content extraction)
 
 ## Safety Evaluators
 

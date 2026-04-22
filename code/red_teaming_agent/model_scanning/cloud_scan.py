@@ -120,11 +120,12 @@ def wait_for_runs(client, eval_id: str, run_ids: list, timeout_minutes: int = 30
                 print(f"  {run.name}: {run.status} ({elapsed}s)", flush=True)
                 if run.status == "completed" and run.per_testing_criteria_results:
                     for cr in run.per_testing_criteria_results:
-                        passed = cr.get("passed", 0)
-                        failed = cr.get("failed", 0)
+                        name = getattr(cr, "name", "?")
+                        passed = getattr(cr, "passed", 0)
+                        failed = getattr(cr, "failed", 0)
                         total = passed + failed
                         asr = f"{failed}/{total}" if total > 0 else "-"
-                        print(f"    {cr.get('name', '?')}: ASR {asr}", flush=True)
+                        print(f"    {name}: ASR {asr}", flush=True)
                 pending.discard(rid)
         if pending:
             elapsed = int(time.time() - start)
