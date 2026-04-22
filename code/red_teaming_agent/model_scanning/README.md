@@ -1,6 +1,6 @@
 # Model Scanning - Red Teaming Agent
 
-Cloud-based red teaming scans for AI models using Azure AI Foundry's OpenAI Evals API with **Model** target type.
+Unified red teaming scans for AI models — both **chat models** (cloud) and **document AI** (local callback).
 
 ## Quick Start
 
@@ -10,14 +10,26 @@ az login
 
 # 1. Copy and fill env vars
 cp .env.sample .env
-# Edit .env with your Foundry project endpoint and model deployment names
 
-# 2. Run scans
-python cloud_scan.py                                          # uses .env defaults
+# 2. Scan everything (chat models via cloud, Document AI via local callback)
+python scan.py --models gpt-5-1 gpt-5-3 mistral-large-3 mistral-document-ai
+
+# 3. Or use env vars
+RED_TEAM_MODELS=gpt-5-1,mistral-large-3,mistral-document-ai python scan.py
+
+# Chat models only (cloud)
 python cloud_scan.py --models gpt-5-1 gpt-5-3 --difficulty moderate
-python cloud_scan.py --difficulty all --no-wait                # fire-and-forget
-python cloud_scan.py --models gpt-5-1 --difficulty easy --timeout 45
+
+# All options
+python scan.py --models gpt-5-1 mistral-document-ai --difficulty easy --no-wait
 ```
+
+## Scripts
+
+| Script | Purpose |
+|--------|---------|
+| **`scan.py`** | Unified scanner — auto-routes chat models to cloud, Document AI to local callback |
+| `cloud_scan.py` | Cloud-only scanner for chat models (evals API, `azure_ai_model` target) |
 
 ## Configuration
 
