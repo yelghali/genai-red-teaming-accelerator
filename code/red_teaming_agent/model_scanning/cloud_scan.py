@@ -41,9 +41,12 @@ NUM_TURNS = int(os.environ.get("RED_TEAM_NUM_TURNS", "1"))
 TIMEOUT_MINUTES = int(os.environ.get("RED_TEAM_TIMEOUT_MINUTES", "30"))
 
 # Models to scan — set RED_TEAM_MODELS env var (comma-separated deployment names)
-# or pass --models on CLI. Only OpenAI-compatible deployments are supported.
-# Non-OpenAI models (Mistral, Claude) use Azure AI Inference API and are NOT
-# supported by the cloud azure_ai_model target (they complete with 0 results).
+# or pass --models on CLI.
+#
+# Supported: any chat-completion model deployed in the Foundry project.
+#   Works: GPT models, Mistral Large 3 (chat), Mistral Small, etc.
+#   Does NOT work: document/OCR models (e.g. mistral-document-ai) — these expect
+#   image/PDF input, not text prompts. They complete with 0 results.
 
 # Safety evaluators (matching the working manual scan exactly)
 TESTING_CRITERIA = [

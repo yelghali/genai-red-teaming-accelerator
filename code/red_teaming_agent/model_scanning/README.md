@@ -43,12 +43,23 @@ All configuration is via environment variables (see [.env.sample](.env.sample)) 
 
 ## Supported Models
 
-Only **OpenAI-compatible** deployments work with the cloud `azure_ai_model` target.
+Any **chat-completion** model deployed in the Foundry project works with the `azure_ai_model` target.
 
-| Target Type | Examples | Supported |
+| Model Type | Examples | Supported |
 |------------|---------|-----------|
-| OpenAI / GPT | gpt-5-1, gpt-5-3, gpt-5-4, gpt-4o | ✅ |
-| Azure AI Inference (Mistral, Claude) | mistral-document-ai, claude-* | ❌ (completes with 0 results) |
+| OpenAI GPT | gpt-5-1, gpt-5-3, gpt-5-4, gpt-4o | ✅ |
+| Mistral Chat | mistral-large-3, mistral-small | ✅ |
+| Claude (with quota) | claude-sonnet-4-5, claude-haiku-4-5 | ✅ (needs quota approval) |
+| Document/OCR models | mistral-document-ai | ❌ (expects image/PDF input, not text) |
+
+### Mistral Document AI
+
+`mistral-document-ai` is an OCR/document model, not a chat model. The cloud red team sends text prompts which don't match its input format, so scans complete with 0 results.
+
+**Best approach for Document AI red teaming:**
+- Use the **local** `RedTeam` SDK (`azure-ai-evaluation[redteam]`) with a custom callback that sends PDFs containing adversarial content
+- Best risk categories: **Code Vulnerability** (prompt injection embedded in PDFs), **Violence** / **Hate & Unfairness** (testing if the model extracts and surfaces unsafe content from documents)
+- Create test PDFs with embedded prompt injection text (e.g., "Ignore previous instructions and...") to test the model's resilience
 
 ## Safety Evaluators
 
