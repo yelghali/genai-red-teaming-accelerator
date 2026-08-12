@@ -1,3 +1,20 @@
+---
+published: true
+type: workshop
+title: Red Teaming Accelerator Workshop
+short_title: RTA Workshop
+description: Configure and run bounded native PyRIT or Microsoft Foundry red-team tests against approved models, APIs, and authenticated browser applications.
+level: intermediate
+authors:
+  - Yassine El Ghali
+contacts:
+  - https://www.linkedin.com/in/yelghali/
+duration_minutes: 60
+tags: ai, red teaming, security, PyRIT, Microsoft Foundry
+navigation_levels: 2
+navigation_numbering: true
+---
+
 # Red Teaming Accelerator Workshop
 
 **Goal:** choose PyRIT or the Foundry cloud agent in configuration, run one bounded test, inspect its native evidence,

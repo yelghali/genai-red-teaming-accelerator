@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import yaml
+
 ROOT = Path(__file__).parents[1]
 MICROSOFT_PYTHON_INDEX = "https://packagefeedproxy.microsoft.io/pypi/simple"
 
@@ -74,12 +76,22 @@ def test_python_dependency_installs_use_the_microsoft_index() -> None:
 
 def test_publication_documents_have_no_template_placeholders() -> None:
     support = (ROOT / "SUPPORT.md").read_text(encoding="utf-8")
+    workshop = (ROOT / "docs/workshop.md").read_text(encoding="utf-8")
 
     assert "REPO OWNER" not in support
     assert "REPO MAINTAINER" not in support
     assert "PROJECT or PRODUCT" not in support
     assert "TODO:" not in support
     assert "SECURITY.md" in support
+
+    marker, front_matter, body = workshop.split("---", maxsplit=2)
+    metadata = yaml.safe_load(front_matter)
+    assert marker == ""
+    assert metadata["published"] is True
+    assert metadata["type"] == "workshop"
+    assert metadata["title"] == "Red Teaming Accelerator Workshop"
+    assert metadata["short_title"] == "RTA Workshop"
+    assert "# Red Teaming Accelerator Workshop" in body
 
 
 def test_shared_engine_selector_delegates_to_native_apis() -> None:
