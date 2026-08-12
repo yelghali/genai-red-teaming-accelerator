@@ -22,6 +22,8 @@ and understand the engines' capability and security boundaries.
 
 **Rule:** continue only after the target owner approves targets, data, risks, strategies, turns, rates, and retention.
 
+---
+
 ## 1. Install
 
 The repository uses the Microsoft package-feed proxy at `https://packagefeedproxy.microsoft.io/pypi/simple` for every
@@ -46,6 +48,8 @@ foundry-scan validate --config configs/foundry.yaml
 rta validate --config configs/redteam.yaml
 ```
 
+---
+
 ## 2. Understand the two engines
 
 ```mermaid
@@ -64,6 +68,8 @@ flowchart LR
 - The selector delegates cloud work to `azure-ai-projects`; it never implements its own attack loop.
 - A native PyRIT record is not a Foundry portal evaluation. Imported cloud rows are labeled snapshots.
 - Foundry model runs use service-generated objectives; custom YAML objectives are a PyRIT capability.
+
+---
 
 ## 3. Inspect and choose a profile
 
@@ -85,6 +91,8 @@ rta plan custom-pyrit --config configs/redteam.yaml --json
 Confirm the PyRIT plan shows a per-risk objective count and the Foundry plan shows `service_managed`. The cloud API
 does not currently expose an objective-count field for model red-team runs.
 
+---
+
 ## 4. Inspect the real targets
 
 Open [../configs/pyrit/targets.yaml](../configs/pyrit/targets.yaml) and confirm:
@@ -101,6 +109,8 @@ of an RTA upgrade; new infrastructure defaults use `rta-*` names.
 Open [../configs/foundry.yaml](../configs/foundry.yaml) and compare the exact publisher, deployment, model, and version.
 Anthropic is deliberately blocked because the subscription Marketplace policy rejected its paid offer.
 
+---
+
 ## 5. List targets with native PyRIT
 
 After written authorization:
@@ -111,6 +121,8 @@ pyrit_scan --config-file configs/pyrit/pyrit-config.yaml --start-server --list-t
 ```
 
 Confirm `foundry-openai` and `foundry-mistral` appear. This initialization creates no model request.
+
+---
 
 ## 6. Run one bounded baseline profile
 
@@ -144,6 +156,8 @@ pyrit_scan airt.jailbreak `
 This calls the real `grta-openai` deployment using the OpenAI-compatible Chat Completions transport. A content-filter
 block is a valid model-side result, not a transport failure.
 
+---
+
 ## 7. Run custom objectives
 
 Review every objective and its authorization boundary before execution, then run:
@@ -157,6 +171,8 @@ production records, or realistic secrets. Use synthetic markers and a non-produc
 
 Changing this profile to `engine: foundry` fails validation because Foundry cloud model runs do not accept arbitrary
 objective files. For Foundry agents, generate and independently review the service taxonomy before an agentic run.
+
+---
 
 ## 8. Inspect Co-PyRIT
 
@@ -175,6 +191,8 @@ For interactive investigation, use the same target catalog:
 pyrit_shell --config-file configs/pyrit/pyrit-config.yaml --start-server --no-animation
 ```
 
+---
+
 ## 9. Inspect Foundry-managed scans offline
 
 ```powershell
@@ -184,6 +202,8 @@ rta plan baseline-foundry --config configs/redteam.yaml --json
 ```
 
 These commands create no cloud resources. Confirm only OpenAI and Mistral are ready.
+
+---
 
 ## 10. Optional portal-visible evaluation
 
@@ -197,6 +217,8 @@ Reconcile the returned eval ID, run ID, deployment metadata, output items, and p
 selector imports an idempotent Co-PyRIT snapshot carrying cloud provenance and the profile labels. Foundry remains the
 authoritative record. For asynchronous/direct operation, use `foundry-scan run --no-wait` and `foundry-scan status`;
 never submit a duplicate just to discover status.
+
+---
 
 ## 11. Docker Compose or dev container
 
@@ -213,6 +235,8 @@ docker compose --profile tools run --rm redteam run baseline-pyrit --config conf
 The port mapping is bound to `127.0.0.1`. The dev container mounts the same volume and validates the profiles after
 creation. Containerized Foundry runs require environment-backed Azure identity; never copy an Azure CLI token or
 client secret into the image or configuration.
+
+---
 
 ## 12. Scan a customer API
 
@@ -242,6 +266,8 @@ rta run --config configs/examples/api-redteam.yaml
 Use `json_string` when the placeholder is inside a JSON string, `json_value` when it replaces an entire JSON value,
 `url` for URL encoding, and `raw` only when the endpoint requires unescaped text. Response paths support fields and
 array indexes, for example `choices[0].message.content`.
+
+---
 
 ## 13. Scan a customer web UI with login
 
@@ -279,6 +305,8 @@ rta run --config configs/examples/ui-redteam.yaml
 
 Set `headless: false` temporarily to observe selector failures. Restore headless mode for CI, keep rates bounded, and
 never store credentials or browser storage state in the repository.
+
+---
 
 ## Completion checklist
 
