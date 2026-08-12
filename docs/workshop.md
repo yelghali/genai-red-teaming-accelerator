@@ -73,10 +73,10 @@ flowchart LR
 
 ## 3. Inspect and choose a profile
 
-Open [../configs/redteam.yaml](../configs/redteam.yaml). It includes:
+Open [configs/redteam.yaml](https://github.com/yelghali/genai-red-teaming-accelerator/blob/main/configs/redteam.yaml). It includes:
 
 - `baseline-pyrit` and `baseline-foundry`, with the same logical target, risks, attacks, turn depth, and labels
-- `custom-pyrit`, which reads [../configs/objectives/custom-policy-checks.yaml](../configs/objectives/custom-policy-checks.yaml)
+- `custom-pyrit`, which reads [configs/objectives/custom-policy-checks.yaml](https://github.com/yelghali/genai-red-teaming-accelerator/blob/main/configs/objectives/custom-policy-checks.yaml)
 - a dual target binding so changing `engine` does not require changing the logical target name
 
 Run offline plans:
@@ -95,7 +95,7 @@ does not currently expose an objective-count field for model red-team runs.
 
 ## 4. Inspect the real targets
 
-Open [../configs/pyrit/targets.yaml](../configs/pyrit/targets.yaml) and confirm:
+Open [configs/pyrit/targets.yaml](https://github.com/yelghali/genai-red-teaming-accelerator/blob/main/configs/pyrit/targets.yaml) and confirm:
 
 - the project endpoint is the approved project
 - `grta-openai` and `grta-mistral` exist in that project
@@ -106,7 +106,7 @@ Open [../configs/pyrit/targets.yaml](../configs/pyrit/targets.yaml) and confirm:
 Those names are existing Azure resource IDs, not current product branding. Do not rename deployed resources as part
 of an RTA upgrade; new infrastructure defaults use `rta-*` names.
 
-Open [../configs/foundry.yaml](../configs/foundry.yaml) and compare the exact publisher, deployment, model, and version.
+Open [configs/foundry.yaml](https://github.com/yelghali/genai-red-teaming-accelerator/blob/main/configs/foundry.yaml) and compare the exact publisher, deployment, model, and version.
 Anthropic is deliberately blocked because the subscription Marketplace policy rejected its paid offer.
 
 ---
@@ -240,7 +240,7 @@ client secret into the image or configuration.
 
 ## 12. Scan a customer API
 
-Open [../configs/examples/api-targets.yaml](../configs/examples/api-targets.yaml). Replace the target URL, body, response
+Open [configs/examples/api-targets.yaml](https://github.com/yelghali/genai-red-teaming-accelerator/blob/main/configs/examples/api-targets.yaml). Replace the target URL, body, response
 path, and scorer model. Keep credentials as environment references. The example composes a Bearer header without
 putting the token in YAML:
 
@@ -271,7 +271,7 @@ array indexes, for example `choices[0].message.content`.
 
 ## 13. Scan a customer web UI with login
 
-Open [../configs/examples/ui-targets.yaml](../configs/examples/ui-targets.yaml). Replace the URL and selectors. The
+Open [configs/examples/ui-targets.yaml](https://github.com/yelghali/genai-red-teaming-accelerator/blob/main/configs/examples/ui-targets.yaml). Replace the URL and selectors. The
 example runs ordered `fill`, `click`, and `wait_for` actions before the chat readiness check. A key-driven flow can use
 `press`. Every filled login value is environment-backed:
 

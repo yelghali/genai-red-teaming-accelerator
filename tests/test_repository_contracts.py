@@ -93,6 +93,7 @@ def test_publication_documents_have_no_template_placeholders() -> None:
     assert metadata["short_title"] == "RTA Workshop"
     assert "# Red Teaming Accelerator Workshop" in body
     assert body.count("\n---\n") == 14
+    assert "](../" not in body
 
 
 def test_shared_engine_selector_delegates_to_native_apis() -> None:
