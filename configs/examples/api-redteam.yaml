@@ -1,0 +1,31 @@
+schema_version: 1
+selected_test: api-custom
+
+runtimes:
+  pyrit:
+    config_file: ../pyrit/pyrit-config.yaml
+    target_catalog: api-targets.yaml
+    working_directory: ../..
+    co_pyrit_url: http://127.0.0.1:8014/history
+  foundry: null
+
+targets:
+  application-api:
+    pyrit_target: application-api
+
+tests:
+  api-custom:
+    engine: pyrit
+    target: application-api
+    setup:
+      type: custom
+      objectives_file: ../objectives/custom-policy-checks.yaml
+      max_objectives: 4
+      attack_strategies: [crescendo]
+      include_baseline: true
+      max_turns: 3
+    max_concurrency: 1
+    labels:
+      team: ai-security
+      env: authorized-test
+      use_case: application-api

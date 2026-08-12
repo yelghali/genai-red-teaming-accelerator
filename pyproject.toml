@@ -1,0 +1,50 @@
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "red-teaming-accelerator"
+version = "0.1.0"
+description = "Red Teaming Accelerator for native PyRIT and Microsoft Foundry evaluations"
+readme = "README.md"
+requires-python = ">=3.11,<3.15"
+license = { file = "LICENSE" }
+authors = [{ name = "yelghali" }]
+dependencies = [
+  "pyrit==1.0.1",
+  "pydantic>=2.10,<3",
+  "PyYAML>=6,<7",
+]
+
+[project.optional-dependencies]
+playwright = ["playwright>=1.49,<2"]
+foundry = [
+  "azure-ai-projects==2.4.0",
+  "azure-identity>=1.19,<2",
+]
+dev = [
+  "pytest>=8,<10",
+  "pytest-asyncio>=0.24,<2",
+  "pytest-cov>=6,<8",
+  "ruff>=0.9,<1",
+]
+
+[project.scripts]
+foundry-scan = "genai_red_teaming_accelerator.foundry_cli:main"
+rta = "genai_red_teaming_accelerator.redteam_cli:main"
+redteam-run = "genai_red_teaming_accelerator.redteam_cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/genai_red_teaming_accelerator"]
+
+[tool.pytest.ini_options]
+addopts = "-ra"
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]

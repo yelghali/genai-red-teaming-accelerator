@@ -1,0 +1,94 @@
+schema_version: 1
+
+# Change this value, or pass a test name to `rta plan|run`.
+selected_test: baseline-pyrit
+
+runtimes:
+  pyrit:
+    config_file: pyrit/pyrit-config.yaml
+    target_catalog: pyrit/targets.yaml
+    working_directory: ..
+    co_pyrit_url: http://127.0.0.1:8014/history
+  foundry:
+    config_file: foundry.yaml
+    output_directory: ../artifacts/foundry
+    publish_to_co_pyrit: true
+
+# A test can switch engines without changing its logical target name.
+targets:
+  openai:
+    pyrit_target: foundry-openai
+    foundry_scan: openai
+  mistral:
+    pyrit_target: foundry-mistral
+    foundry_scan: mistral
+
+tests:
+  baseline-pyrit:
+    engine: pyrit
+    target: openai
+    setup:
+      type: baseline
+      risk_categories:
+        - name: violence
+          pyrit_datasets: [airt_violence]
+        - name: hate_unfairness
+          pyrit_datasets: [airt_hate]
+        - name: sexual
+          pyrit_datasets: [airt_sexual]
+        - name: self_harm
+          pyrit_datasets: [airt_imminent_crisis]
+      objective_count:
+        pyrit_per_risk: 1
+        # Foundry cloud currently owns objective generation and exposes no count field.
+        foundry: service_managed
+      attack_strategies: [base64, crescendo]
+      include_baseline: true
+      max_turns: 3
+    max_concurrency: 1
+    labels:
+      team: ai-security
+      env: isolated-lab
+      use_case: baseline-safety
+
+  baseline-foundry:
+    engine: foundry
+    target: openai
+    setup:
+      type: baseline
+      risk_categories:
+        - name: violence
+          pyrit_datasets: [airt_violence]
+        - name: hate_unfairness
+          pyrit_datasets: [airt_hate]
+        - name: sexual
+          pyrit_datasets: [airt_sexual]
+        - name: self_harm
+          pyrit_datasets: [airt_imminent_crisis]
+      objective_count:
+        pyrit_per_risk: 1
+        foundry: service_managed
+      attack_strategies: [base64, crescendo]
+      include_baseline: true
+      max_turns: 3
+    max_concurrency: 1
+    labels:
+      team: ai-security
+      env: isolated-lab
+      use_case: baseline-safety
+
+  custom-pyrit:
+    engine: pyrit
+    target: openai
+    setup:
+      type: custom
+      objectives_file: objectives/custom-policy-checks.yaml
+      max_objectives: 4
+      attack_strategies: [crescendo]
+      include_baseline: true
+      max_turns: 5
+    max_concurrency: 1
+    labels:
+      team: ai-security
+      env: isolated-lab
+      use_case: custom-policy-validation

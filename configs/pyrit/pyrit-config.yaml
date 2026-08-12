@@ -1,0 +1,14 @@
+memory_db_type: sqlite
+initializers:
+  - name: technique
+    args:
+      tags: [core]
+initialization_scripts:
+  - configs/pyrit/initializer.py
+env_files: []
+silent: false
+operator: red-teaming-accelerator
+operation: native-pyrit
+max_concurrent_scenario_runs: 1
+server:
+  url: http://127.0.0.1:8014

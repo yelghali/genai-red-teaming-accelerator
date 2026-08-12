@@ -1,4 +1,0 @@
-azure-ai-projects>=2.0.0
-azure-ai-evaluation[redteam]
-azure-identity
-Pillow

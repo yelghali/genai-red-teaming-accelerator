@@ -1,0 +1,63 @@
+schema_version: 1
+project_endpoint: https://grtafd08120131.services.ai.azure.com/api/projects/grta-redteam
+authorization:
+  environment: REDTEAM_SCOPE_APPROVED
+  expected_value: "true"
+allow_provider_managed_workload: true
+output_directory: artifacts/foundry
+timeout_minutes: 60
+poll_interval_seconds: 10
+
+# Provider, publisher, deployment, model, and version are configuration data.
+# Add another scan entry for any deployment accepted by the Foundry evaluation service.
+scans:
+  openai:
+    target:
+      type: model
+      provider: openai
+      publisher: OpenAI
+      deployment: grta-openai
+      model: gpt-5-mini
+      version: "2025-08-07"
+    risk_categories: [violence, hate_unfairness]
+    attack_strategies: [Base64]
+    num_turns: 1
+
+  mistral:
+    target:
+      type: model
+      provider: mistral
+      publisher: Mistral AI
+      deployment: grta-mistral
+      model: Mistral-Large-3
+      version: "1"
+    risk_categories: [violence, hate_unfairness]
+    attack_strategies: [Base64]
+    num_turns: 1
+
+  anthropic:
+    target:
+      type: model
+      provider: anthropic
+      publisher: Anthropic
+      deployment: grta-anthropic
+      model: claude-haiku-4-5
+      version: "2"
+      ready: false
+      status_reason: Subscription Marketplace policy blocks this paid partner offer.
+    risk_categories: [violence, hate_unfairness]
+    attack_strategies: [Base64]
+    num_turns: 1
+
+  agent:
+    target:
+      type: agent
+      name: replace-with-agent-name
+      version: "1"
+      ready: false
+      status_reason: Configure a real agent and independently reviewed taxonomy before execution.
+    risk_categories: [prohibited_actions, task_adherence, sensitive_data_leakage]
+    attack_strategies: [Base64]
+    num_turns: 1
+    evaluator_deployment: replace-with-evaluator-deployment
+    reviewed_taxonomy_id: azureai://registries/replace/assessmentprojects/replace/taxonomies/replace/versions/1

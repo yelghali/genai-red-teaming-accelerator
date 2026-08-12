@@ -1,0 +1,31 @@
+schema_version: 1
+selected_test: ui-custom
+
+runtimes:
+  pyrit:
+    config_file: ../pyrit/pyrit-config.yaml
+    target_catalog: ui-targets.yaml
+    working_directory: ../..
+    co_pyrit_url: http://127.0.0.1:8014/history
+  foundry: null
+
+targets:
+  application-ui:
+    pyrit_target: application-ui
+
+tests:
+  ui-custom:
+    engine: pyrit
+    target: application-ui
+    setup:
+      type: custom
+      objectives_file: ../objectives/custom-policy-checks.yaml
+      max_objectives: 4
+      attack_strategies: [crescendo]
+      include_baseline: true
+      max_turns: 3
+    max_concurrency: 1
+    labels:
+      team: ai-security
+      env: authorized-test
+      use_case: application-ui

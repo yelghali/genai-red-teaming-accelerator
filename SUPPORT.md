@@ -1,25 +1,27 @@
-# TODO: The maintainer of this repo has not yet edited this file
-
-**REPO OWNER**: Do you want Customer Service & Support (CSS) support for this product/project?
-
-- **No CSS support:** Fill out this template with information about how to file issues and get help.
-- **Yes CSS support:** Fill out an intake form at [aka.ms/onboardsupport](https://aka.ms/onboardsupport). CSS will work with/help you to determine next steps.
-- **Not sure?** Fill out an intake as though the answer were "Yes". CSS will help you decide.
-
-*Then remove this first heading from this SUPPORT.MD file before publishing your repo.*
-
 # Support
 
-## How to file issues and get help  
+The Red Teaming Accelerator is an open-source sample and does not include a support SLA or Microsoft Customer
+Service and Support entitlement.
 
-This project uses GitHub Issues to track bugs and feature requests. Please search the existing 
-issues before filing new issues to avoid duplicates.  For new issues, file your bug or 
-feature request as a new Issue.
+## Questions, bugs, and feature requests
 
-For help and questions about using this project, please **REPO MAINTAINER: INSERT INSTRUCTIONS HERE 
-FOR HOW TO ENGAGE REPO OWNERS OR COMMUNITY FOR HELP. COULD BE A STACK OVERFLOW TAG OR OTHER
-CHANNEL. WHERE WILL YOU HELP PEOPLE?**.
+Search the [existing GitHub issues](https://github.com/yelghali/genai-red-teaming-accelerator/issues) first. If the
+problem or request is not already tracked, open a new issue and include:
 
-## Microsoft Support Policy  
+- the RTA, PyRIT, Python, and optional Foundry SDK versions;
+- the operating system and whether the failure occurs locally, in Compose, or in a dev container;
+- the command and complete sanitized error output;
+- the smallest strict YAML configuration that reproduces the issue; and
+- whether `rta validate` and the corresponding offline `rta plan` succeed.
 
-Support for this **PROJECT or PRODUCT** is limited to the resources listed above.
+Never attach API keys, bearer tokens, browser credentials, Azure access tokens, personal data, production prompts,
+or unredacted red-team evidence. Replace resource names and endpoints when they are not required to reproduce the
+problem.
+
+For Azure service availability, quota, billing, identity, Marketplace, or regional model-catalog incidents, use the
+support channel associated with the affected Azure subscription. Repository issues cannot investigate service-side
+tenant data.
+
+## Security reports
+
+Do not open a public issue for a suspected vulnerability. Follow [SECURITY.md](SECURITY.md) instead.

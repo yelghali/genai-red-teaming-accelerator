@@ -1,0 +1,9 @@
+**
+!Dockerfile.pyrit-scan
+!LICENSE
+!README.md
+!pyproject.toml
+!src/
+!src/**
+!configs/
+!configs/**

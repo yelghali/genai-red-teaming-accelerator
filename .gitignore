@@ -37,7 +37,9 @@ MANIFEST
 *.ipynb_checkpoints/
 
 # Virtual environments
+.venv/
 venv/
+.venv-*/
 env/
 ENV/
 env.bak/
@@ -63,11 +65,12 @@ conversations.json
 # Results and outputs
 results/
 outputs/
+artifacts/
+.pytest_cache/
+.coverage
+htmlcov/
 *.csv
 *.xlsx
-
-# Docker
-.dockerignore
 
 # Temporary files
 *.tmp

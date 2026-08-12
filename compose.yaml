@@ -1,0 +1,58 @@
+name: red-teaming-accelerator
+
+x-runtime: &runtime
+  image: rta-redteam:local
+  build:
+    context: .
+    dockerfile: Dockerfile.pyrit-scan
+    args:
+      PIP_INDEX_URL: https://packagefeedproxy.microsoft.io/pypi/simple
+  working_dir: /app
+  environment:
+    - XDG_DATA_HOME=/data
+    - REDTEAM_SCOPE_APPROVED=${REDTEAM_SCOPE_APPROVED:-false}
+    - AZURE_CLIENT_ID
+    - AZURE_TENANT_ID
+    - AZURE_CLIENT_SECRET
+    - SCORER_API_KEY
+    - TARGET_API_TOKEN
+    - TARGET_TENANT_KEY
+    - TARGET_UI_USERNAME
+    - TARGET_UI_PASSWORD
+  volumes:
+    - pyrit-data:/data
+    - ./artifacts:/app/artifacts
+
+services:
+  co-pyrit:
+    <<: *runtime
+    entrypoint: ["pyrit_backend"]
+    command:
+      - --config-file
+      - configs/pyrit/pyrit-config.yaml
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8014"
+    ports:
+      - 127.0.0.1:${COPYRIT_PORT:-8014}:8014
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen('http://127.0.0.1:8014/api/health', timeout=2)
+      interval: 5s
+      timeout: 3s
+      retries: 24
+      start_period: 10s
+
+  redteam:
+    <<: *runtime
+    profiles: [tools]
+    entrypoint: ["rta"]
+    command: ["validate", "--config", "configs/redteam.yaml"]
+
+volumes:
+  pyrit-data:
+    name: rta-pyrit-data

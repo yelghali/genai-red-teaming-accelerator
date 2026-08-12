@@ -1,0 +1,56 @@
+schema_version: 1
+
+authorization:
+  environment: REDTEAM_SCOPE_APPROVED
+  expected_value: "true"
+
+# PyRIT attacks use this model to score target responses. Replace the endpoint and model.
+scorer_target: scorer-model
+
+targets:
+  - name: scorer-model
+    tags: [model, scorer]
+    target:
+      type: openai
+      provider: openai-compatible
+      endpoint: https://scorer.example.com/v1/
+      model: replace-with-scorer-model
+      api: chat
+      auth: api_key
+      api_key:
+        source: env
+        name: SCORER_API_KEY
+      max_requests_per_minute: 12
+
+  - name: application-ui
+    tags: [application, browser]
+    target:
+      type: playwright
+      url: https://chat.example.com/
+      browser: chromium
+      headless: true
+      timeout_ms: 30000
+      auth_steps:
+        - action: fill
+          selector: input[name="email"]
+          value:
+            source: env
+            name: TARGET_UI_USERNAME
+        - action: fill
+          selector: input[name="password"]
+          value:
+            source: env
+            name: TARGET_UI_PASSWORD
+        - action: click
+          selector: button[type="submit"]
+        - action: wait_for
+          selector: textarea[name="prompt"]
+          state: visible
+      selectors:
+        ready: textarea[name="prompt"]
+        prompt_input: textarea[name="prompt"]
+        submit: button[data-action="send"]
+        response: '[data-role="assistant"]'
+      max_requests_per_minute: 6
+
+datasets: []
