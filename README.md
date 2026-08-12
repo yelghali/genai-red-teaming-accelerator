@@ -52,6 +52,29 @@ playwright install chromium
 
 The verified runtime contracts are `pyrit==1.0.1` and `azure-ai-projects==2.4.0`.
 
+## Quick start: choose what to scan
+
+Run commands from the repository root. Use `validate` and `plan` first; both are offline. Only `run` sends requests
+to a target or creates a Foundry evaluation.
+
+| Target | Configure | Offline check | Authorized execution |
+|---|---|---|---|
+| Model through native PyRIT | [configs/pyrit/targets.yaml](configs/pyrit/targets.yaml) and the `baseline-pyrit` or `custom-pyrit` profile | `rta plan baseline-pyrit --config configs/redteam.yaml --json` | `rta run baseline-pyrit --config configs/redteam.yaml` |
+| Model through Foundry cloud | [configs/foundry.yaml](configs/foundry.yaml) and the `baseline-foundry` profile | `rta plan baseline-foundry --config configs/redteam.yaml --json` | `rta run baseline-foundry --config configs/redteam.yaml` |
+| JSON HTTP API | [configs/examples/api-targets.yaml](configs/examples/api-targets.yaml) | `rta plan --config configs/examples/api-redteam.yaml --json` | `rta run --config configs/examples/api-redteam.yaml` |
+| Authenticated browser UI | [configs/examples/ui-targets.yaml](configs/examples/ui-targets.yaml) | `rta plan --config configs/examples/ui-redteam.yaml --json` | `rta run --config configs/examples/ui-redteam.yaml` |
+
+Before execution, replace every placeholder endpoint, model name, request shape, response path, or browser selector;
+set the referenced environment variables; record written authorization; and then set
+`REDTEAM_SCOPE_APPROVED=true`. Structural validation deliberately does not contact placeholder services.
+
+Native PyRIT scans use two model roles: the **objective target** being tested and an OpenAI-compatible **helper
+model** used for adversarial prompt generation and response scoring. The API and UI examples therefore require both
+the application target and the placeholder `scorer-model` to be configured.
+
+See [docs/running-scans.md](docs/running-scans.md) for complete model, Foundry, API, UI, result-review, troubleshooting,
+and Docker instructions.
+
 ## Choose the engine in configuration
 
 [configs/redteam.yaml](configs/redteam.yaml) contains selectable tests. Set `selected_test`, or pass a test name to
@@ -291,5 +314,5 @@ Only a few files implement runtime behavior:
 - [src/genai_red_teaming_accelerator/foundry_cli.py](src/genai_red_teaming_accelerator/foundry_cli.py) — the Foundry-only command.
 - [infra/foundry/main.bicep](infra/foundry/main.bicep) — generic deployment loop for project models.
 
-See [docs/workshop.md](docs/workshop.md) for the short lab and [infra/foundry/README.md](infra/foundry/README.md) for
-infrastructure boundaries.
+See [docs/running-scans.md](docs/running-scans.md) for the operational runbook, [docs/workshop.md](docs/workshop.md)
+for the guided lab, and [infra/foundry/README.md](infra/foundry/README.md) for infrastructure boundaries.

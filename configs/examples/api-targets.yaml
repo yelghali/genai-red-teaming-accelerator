@@ -4,7 +4,8 @@ authorization:
   environment: REDTEAM_SCOPE_APPROVED
   expected_value: "true"
 
-# PyRIT attacks use this model to score target responses. Replace the endpoint and model.
+# PyRIT uses this helper model for adversarial prompt generation and response scoring.
+# Replace the endpoint and model before execution.
 scorer_target: scorer-model
 
 targets:

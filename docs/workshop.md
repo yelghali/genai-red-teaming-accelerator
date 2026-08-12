@@ -22,6 +22,17 @@ and understand the engines' capability and security boundaries.
 
 **Rule:** continue only after the target owner approves targets, data, risks, strategies, turns, rates, and retention.
 
+Choose the path that matches the target:
+
+| Target | Workshop steps |
+|---|---|
+| Model through PyRIT | 3–8 |
+| Portal-visible Foundry model evaluation | 9–10 |
+| JSON HTTP API | 12 |
+| Authenticated browser UI | 13 |
+
+The field-by-field operational reference is [Running RTA scans](https://github.com/yelghali/genai-red-teaming-accelerator/blob/main/docs/running-scans.md).
+
 ---
 
 ## 1. Install
@@ -241,7 +252,8 @@ client secret into the image or configuration.
 ## 12. Scan a customer API
 
 Open [configs/examples/api-targets.yaml](https://github.com/yelghali/genai-red-teaming-accelerator/blob/main/configs/examples/api-targets.yaml). Replace the target URL, body, response
-path, and scorer model. Keep credentials as environment references. The example composes a Bearer header without
+path, and PyRIT helper model. The helper model generates adversarial prompts and scores responses; the API remains
+the objective target. Keep credentials as environment references. The example composes a Bearer header without
 putting the token in YAML:
 
 ```yaml
@@ -265,15 +277,17 @@ rta run --config configs/examples/api-redteam.yaml
 
 Use `json_string` when the placeholder is inside a JSON string, `json_value` when it replaces an entire JSON value,
 `url` for URL encoding, and `raw` only when the endpoint requires unescaped text. Response paths support fields and
-array indexes, for example `choices[0].message.content`.
+array indexes, for example `choices[0].message.content`. The command prints the PyRIT scenario result ID; review its
+labeled conversations in the loopback Co-PyRIT history from step 8.
 
 ---
 
 ## 13. Scan a customer web UI with login
 
 Open [configs/examples/ui-targets.yaml](https://github.com/yelghali/genai-red-teaming-accelerator/blob/main/configs/examples/ui-targets.yaml). Replace the URL and selectors. The
-example runs ordered `fill`, `click`, and `wait_for` actions before the chat readiness check. A key-driven flow can use
-`press`. Every filled login value is environment-backed:
+example also needs an OpenAI-compatible helper model for attack generation and scoring. It runs ordered `fill`,
+`click`, and `wait_for` actions before the chat readiness check. A key-driven flow can use `press`. Every filled
+login value is environment-backed:
 
 ```yaml
 auth_steps:
@@ -304,7 +318,8 @@ rta run --config configs/examples/ui-redteam.yaml
 ```
 
 Set `headless: false` temporarily to observe selector failures. Restore headless mode for CI, keep rates bounded, and
-never store credentials or browser storage state in the repository.
+never store credentials or browser storage state in the repository. The command prints the PyRIT scenario result ID;
+review its labeled conversations in the loopback Co-PyRIT history from step 8.
 
 ---
 

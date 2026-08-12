@@ -1,5 +1,18 @@
 # Configuration
 
+Use the pair of files for the target type being tested:
+
+| Target | Target definition | RTA profile | Typical command |
+|---|---|---|---|
+| Foundry/OpenAI-compatible model with PyRIT | [pyrit/targets.yaml](pyrit/targets.yaml) | [redteam.yaml](redteam.yaml) | `rta run baseline-pyrit --config configs/redteam.yaml` |
+| Foundry portal evaluation | [foundry.yaml](foundry.yaml) | [redteam.yaml](redteam.yaml) | `rta run baseline-foundry --config configs/redteam.yaml` |
+| JSON HTTP API | [examples/api-targets.yaml](examples/api-targets.yaml) | [examples/api-redteam.yaml](examples/api-redteam.yaml) | `rta run --config configs/examples/api-redteam.yaml` |
+| Authenticated browser UI | [examples/ui-targets.yaml](examples/ui-targets.yaml) | [examples/ui-redteam.yaml](examples/ui-redteam.yaml) | `rta run --config configs/examples/ui-redteam.yaml` |
+
+Always run the matching `rta validate` and `rta plan --json` command before `rta run`. The first two commands are
+offline; the last sends real traffic. The full procedure and field-by-field checklists are in
+[Running RTA scans](../docs/running-scans.md).
+
 The shared entry point is [redteam.yaml](redteam.yaml). A test profile selects `engine: pyrit` or `engine: foundry`,
 binds one logical target to its native name, and defines baseline or custom coverage. Change `selected_test`, or pass
 the profile name to `rta plan|run`. `redteam-run` remains a compatibility alias.
@@ -19,6 +32,21 @@ Two PyRIT-only examples keep setup small and are validated in CI:
   including environment-backed API headers and Bearer-prefix composition.
 - [examples/ui-redteam.yaml](examples/ui-redteam.yaml) selects [examples/ui-targets.yaml](examples/ui-targets.yaml),
   including ordered, environment-backed browser login steps.
+
+Both examples contain two roles: an application target and a placeholder OpenAI-compatible `scorer-model` used by
+PyRIT for adversarial prompt generation and response scoring. Replace both roles' placeholders before execution.
+
+Required authentication depends on the selected path:
+
+| Path | Checked-in authentication inputs |
+|---|---|
+| Foundry model through PyRIT or Foundry cloud | `az login`, or an approved workload identity/service principal |
+| API example | `SCORER_API_KEY`, `TARGET_API_TOKEN`, `TARGET_TENANT_KEY` |
+| UI example | `SCORER_API_KEY`, `TARGET_UI_USERNAME`, `TARGET_UI_PASSWORD` |
+| Every live execution | `REDTEAM_SCOPE_APPROVED=true` after written approval |
+
+If a target uses different authentication, change its environment references in the target catalog and provide those
+variables at runtime. Do not add secret values to YAML.
 
 The unified runner sets `RTA_PYRIT_TARGETS` to the selected catalog during PyRIT initialization, so each profile uses
 the catalog it validates. A PyRIT-only profile can set `runtimes.foundry: null` and omit `foundry_scan`; a Foundry

@@ -65,6 +65,7 @@ def test_python_dependency_installs_use_the_microsoft_index() -> None:
         ROOT / ".devcontainer/devcontainer.json",
         ROOT / ".github/workflows/accelerator-quality.yml",
         ROOT / "README.md",
+        ROOT / "docs/running-scans.md",
         ROOT / "docs/workshop.md",
     ]
 
@@ -94,6 +95,27 @@ def test_publication_documents_have_no_template_placeholders() -> None:
     assert "# Red Teaming Accelerator Workshop" in body
     assert body.count("\n---\n") == 14
     assert "](../" not in body
+
+
+def test_running_scan_guide_covers_every_supported_target_path() -> None:
+    guide = (ROOT / "docs/running-scans.md").read_text(encoding="utf-8")
+
+    required_sections = [
+        "## 3. Scan a model with native PyRIT",
+        "## 4. Create a portal-visible Foundry model evaluation",
+        "## 5. Scan a JSON HTTP API",
+        "## 6. Scan an authenticated browser UI",
+        "## 7. Review results",
+    ]
+    for section in required_sections:
+        assert section in guide
+
+    assert "rta plan baseline-pyrit --config configs/redteam.yaml --json" in guide
+    assert "rta run baseline-foundry --config configs/redteam.yaml" in guide
+    assert "rta run --config configs/examples/api-redteam.yaml" in guide
+    assert "rta run --config configs/examples/ui-redteam.yaml" in guide
+    assert "validate`, `rta list`, and `rta plan` are offline" in guide
+    assert "REDTEAM_SCOPE_APPROVED=true" in guide
 
 
 def test_shared_engine_selector_delegates_to_native_apis() -> None:
