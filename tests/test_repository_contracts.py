@@ -1,11 +1,15 @@
 from __future__ import annotations
 
+import re
 from pathlib import Path
+from urllib.parse import unquote, urlsplit
 
 import yaml
 
 ROOT = Path(__file__).parents[1]
 MICROSOFT_PYTHON_INDEX = "https://packagefeedproxy.microsoft.io/pypi/simple"
+MARKDOWN_LINK = re.compile(r"(?<!!)\[[^\]]+\]\(([^)]+)\)")
+YAML_FENCE = re.compile(r"```yaml\s*\n(.*?)```", re.DOTALL)
 
 
 def test_obsolete_wrapper_and_deterministic_demo_are_removed() -> None:
@@ -114,8 +118,40 @@ def test_running_scan_guide_covers_every_supported_target_path() -> None:
     assert "rta run baseline-foundry --config configs/redteam.yaml" in guide
     assert "rta run --config configs/examples/api-redteam.yaml" in guide
     assert "rta run --config configs/examples/ui-redteam.yaml" in guide
-    assert "validate`, `rta list`, and `rta plan` are offline" in guide
+    assert "`rta validate` validates all referenced configuration files" in guide
+    assert "All three are offline" in guide
     assert "REDTEAM_SCOPE_APPROVED=true" in guide
+    assert "Put `{PROMPT}` exactly once" in guide
+    assert "Target URLs contain no embedded credentials" in guide
+
+
+def test_local_documentation_links_resolve_inside_the_repository() -> None:
+    documents = [
+        ROOT / "README.md",
+        ROOT / "configs/README.md",
+        ROOT / "docs/running-scans.md",
+        ROOT / "docs/workshop.md",
+    ]
+
+    for document in documents:
+        for raw_target in MARKDOWN_LINK.findall(document.read_text(encoding="utf-8")):
+            target = raw_target.strip().split(maxsplit=1)[0]
+            parsed = urlsplit(target)
+            if parsed.scheme or target.startswith("#"):
+                continue
+            resolved = (document.parent / unquote(parsed.path)).resolve()
+            assert resolved.is_relative_to(ROOT), f"Link escapes repository in {document.relative_to(ROOT)}: {target}"
+            assert resolved.exists(), f"Broken link in {document.relative_to(ROOT)}: {target}"
+
+
+def test_documented_yaml_examples_parse() -> None:
+    documents = [ROOT / "docs/running-scans.md", ROOT / "docs/workshop.md"]
+
+    for document in documents:
+        blocks = YAML_FENCE.findall(document.read_text(encoding="utf-8"))
+        assert blocks, f"No YAML examples found in {document.relative_to(ROOT)}"
+        for block in blocks:
+            assert yaml.safe_load(block) is not None, f"Empty YAML example in {document.relative_to(ROOT)}"
 
 
 def test_shared_engine_selector_delegates_to_native_apis() -> None:
@@ -134,6 +170,11 @@ def test_shared_engine_selector_delegates_to_native_apis() -> None:
     assert "rta-pyrit-data" in compose
     assert "rta plan baseline-pyrit" in workflow
     assert "rta plan baseline-foundry" in workflow
+    assert "rta plan custom-pyrit" in workflow
+    assert "rta plan --config configs/examples/api-redteam.yaml --json" in workflow
+    assert "rta plan --config configs/examples/ui-redteam.yaml --json" in workflow
+    assert 'test "$(id -u)" != 0 && python -m pip check' in workflow
+    assert "p.chromium.launch(headless=True)" in workflow
 
 
 def test_legacy_prefix_is_limited_to_existing_azure_resource_ids() -> None:

@@ -236,10 +236,11 @@ never submit a duplicate just to discover status.
 The selector and Co-PyRIT share the `rta-pyrit-data` volume:
 
 ```powershell
-$env:REDTEAM_SCOPE_APPROVED = "true"
 docker compose build
-docker compose up -d --wait co-pyrit
 docker compose --profile tools run --rm redteam validate --config configs/redteam.yaml
+
+$env:REDTEAM_SCOPE_APPROVED = "true"
+docker compose up -d --wait co-pyrit
 docker compose --profile tools run --rm redteam run baseline-pyrit --config configs/redteam.yaml
 ```
 
@@ -269,9 +270,10 @@ Set the values and inspect the exact plan before execution:
 $env:TARGET_API_TOKEN = "<enter outside source control>"
 $env:TARGET_TENANT_KEY = "<enter outside source control>"
 $env:SCORER_API_KEY = "<enter outside source control>"
-$env:REDTEAM_SCOPE_APPROVED = "true"
 rta validate --config configs/examples/api-redteam.yaml
 rta plan --config configs/examples/api-redteam.yaml --json
+
+$env:REDTEAM_SCOPE_APPROVED = "true"
 rta run --config configs/examples/api-redteam.yaml
 ```
 
@@ -311,9 +313,10 @@ auth_steps:
 $env:TARGET_UI_USERNAME = "<enter outside source control>"
 $env:TARGET_UI_PASSWORD = "<enter outside source control>"
 $env:SCORER_API_KEY = "<enter outside source control>"
-$env:REDTEAM_SCOPE_APPROVED = "true"
 rta validate --config configs/examples/ui-redteam.yaml
 rta plan --config configs/examples/ui-redteam.yaml --json
+
+$env:REDTEAM_SCOPE_APPROVED = "true"
 rta run --config configs/examples/ui-redteam.yaml
 ```
 

@@ -233,11 +233,12 @@ from real resources.
 The UI is published only on loopback.
 
 ```powershell
-$env:REDTEAM_SCOPE_APPROVED = "true"
 docker compose build
-docker compose up -d --wait co-pyrit
 docker compose --profile tools run --rm redteam validate --config configs/redteam.yaml
 docker compose --profile tools run --rm redteam plan baseline-foundry --config configs/redteam.yaml --json
+
+$env:REDTEAM_SCOPE_APPROVED = "true"
+docker compose up -d --wait co-pyrit
 docker compose --profile tools run --rm redteam run baseline-pyrit --config configs/redteam.yaml
 ```
 
@@ -255,6 +256,9 @@ endpoint. It does not submit a cloud evaluation or call a model.
 - Both native execution paths require `REDTEAM_SCOPE_APPROVED=true`; offline `validate`, `list`, and `plan` do not.
 - Keep API keys, bearer tokens, cookies, production data, and personal data out of configuration and objective files.
 - Prefer `DefaultAzureCredential` or environment-backed secret references. Do not pass secrets as command arguments.
+- Duplicate YAML keys are rejected, and validation errors omit input values and source lines so pasted secrets are not echoed.
+- Every native target must declare `max_requests_per_minute`; there is no implicit unlimited rate.
+- Remote targets and Foundry endpoints must use HTTPS; plain HTTP targets are accepted only on loopback for local development.
 - Keep Co-PyRIT on `127.0.0.1`; it is a development review surface, not an authenticated multi-user service.
 - Treat generated attacks and responses as sensitive. Foundry and PyRIT retention/telemetry boundaries are distinct.
 
@@ -267,9 +271,10 @@ URL, request body, response path, and scorer model, then export the referenced v
 $env:TARGET_API_TOKEN = "<enter outside source control>"
 $env:TARGET_TENANT_KEY = "<enter outside source control>"
 $env:SCORER_API_KEY = "<enter outside source control>"
-$env:REDTEAM_SCOPE_APPROVED = "true"
 rta validate --config configs/examples/api-redteam.yaml
 rta plan --config configs/examples/api-redteam.yaml --json
+
+$env:REDTEAM_SCOPE_APPROVED = "true"
 rta run --config configs/examples/api-redteam.yaml
 ```
 
@@ -286,9 +291,10 @@ selectors. Replace the URL and selectors, then set the environment-backed login 
 $env:TARGET_UI_USERNAME = "<enter outside source control>"
 $env:TARGET_UI_PASSWORD = "<enter outside source control>"
 $env:SCORER_API_KEY = "<enter outside source control>"
-$env:REDTEAM_SCOPE_APPROVED = "true"
 rta validate --config configs/examples/ui-redteam.yaml
 rta plan --config configs/examples/ui-redteam.yaml --json
+
+$env:REDTEAM_SCOPE_APPROVED = "true"
 rta run --config configs/examples/ui-redteam.yaml
 ```
 
@@ -304,6 +310,7 @@ data, risks, strategies, turns, rates, and retention.
 
 Only a few files implement runtime behavior:
 
+- [src/genai_red_teaming_accelerator/config_io.py](src/genai_red_teaming_accelerator/config_io.py) — loads YAML without echoing source values in parse errors.
 - [src/genai_red_teaming_accelerator/redteam_config.py](src/genai_red_teaming_accelerator/redteam_config.py) — strict engine/profile and objective schemas.
 - [src/genai_red_teaming_accelerator/redteam.py](src/genai_red_teaming_accelerator/redteam.py) — delegates to native APIs and selects the engine.
 - [src/genai_red_teaming_accelerator/pyrit_scenario.py](src/genai_red_teaming_accelerator/pyrit_scenario.py) — passes bounded turn depth into PyRIT's upstream scenario.

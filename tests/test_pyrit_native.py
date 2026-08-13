@@ -49,6 +49,7 @@ def test_provider_and_model_names_are_configuration_data() -> None:
                     model="any-deployment",
                     auth="api_key",
                     api_key=SecretRef(name="CUSTOMER_MODEL_KEY"),
+                    max_requests_per_minute=60,
                 ),
             )
         ],
@@ -58,14 +59,45 @@ def test_provider_and_model_names_are_configuration_data() -> None:
     assert catalog.targets[0].target.model == "any-deployment"
 
 
+@pytest.mark.parametrize(
+    "target",
+    [
+        {
+            "type": "openai",
+            "provider": "customer",
+            "endpoint": "https://model.example/v1/",
+            "model": "deployment",
+            "auth": "api_key",
+            "api_key": {"source": "env", "name": "MODEL_API_KEY"},
+        },
+        {
+            "type": "http",
+            "url": "https://api.example/chat",
+            "body_template": '{"message":"{PROMPT}"}',
+        },
+        {
+            "type": "playwright",
+            "url": "https://chat.example/",
+            "selectors": {"prompt_input": "#prompt", "submit": "#send", "response": ".response"},
+        },
+    ],
+)
+def test_every_native_target_requires_an_explicit_request_rate(target: dict[str, object]) -> None:
+    with pytest.raises(ValueError, match="max_requests_per_minute"):
+        TargetDefinition.model_validate({"name": "customer-target", "target": target})
+
+
 def test_sensitive_http_header_requires_environment_reference() -> None:
-    with pytest.raises(ValueError, match="environment reference"):
+    with pytest.raises(ValueError, match="environment reference") as captured:
         HttpTarget(
             type="http",
             url="https://api.example/chat",
-            headers={"Authorization": "Bearer literal"},
+            headers={"Authorization": "Bearer topsecret"},
             body_template='{"message":"{PROMPT}"}',
+            max_requests_per_minute=60,
         )
+
+    assert "topsecret" not in str(captured.value)
 
 
 def test_custom_key_header_requires_environment_reference() -> None:
@@ -75,6 +107,130 @@ def test_custom_key_header_requires_environment_reference() -> None:
             url="https://api.example/chat",
             headers={"X-Tenant-Key": "literal"},
             body_template='{"message":"{PROMPT}"}',
+            max_requests_per_minute=60,
+        )
+
+
+def test_http_prompt_placeholder_must_occur_exactly_once() -> None:
+    for body_template in ('{"first":"{PROMPT}","second":"{PROMPT}"}', '{"message":"static"}'):
+        with pytest.raises(ValueError, match="exactly once"):
+            HttpTarget(
+                type="http",
+                url="https://api.example/chat",
+                body_template=body_template,
+                max_requests_per_minute=60,
+            )
+
+
+@pytest.mark.parametrize(
+    "target",
+    [
+        {
+            "type": "openai",
+            "provider": "customer",
+            "endpoint": "https://user:password@model.example/v1/",
+            "model": "deployment",
+            "auth": "api_key",
+            "api_key": {"source": "env", "name": "MODEL_API_KEY"},
+            "max_requests_per_minute": 60,
+        },
+        {
+            "type": "http",
+            "url": "https://user:password@api.example/chat",
+            "body_template": '{"message":"{PROMPT}"}',
+            "max_requests_per_minute": 60,
+        },
+        {
+            "type": "playwright",
+            "url": "https://user:password@chat.example/",
+            "selectors": {"prompt_input": "#prompt", "submit": "#send", "response": ".response"},
+            "max_requests_per_minute": 60,
+        },
+    ],
+)
+def test_target_urls_reject_embedded_credentials(target: dict[str, object]) -> None:
+    with pytest.raises(ValueError, match="must not embed credentials"):
+        TargetDefinition.model_validate({"name": "customer-target", "target": target})
+
+
+@pytest.mark.parametrize(
+    "target",
+    [
+        {
+            "type": "openai",
+            "provider": "customer",
+            "endpoint": "http://model.example/v1/",
+            "model": "deployment",
+            "auth": "api_key",
+            "api_key": {"source": "env", "name": "MODEL_API_KEY"},
+            "max_requests_per_minute": 60,
+        },
+        {
+            "type": "http",
+            "url": "http://api.example/chat",
+            "body_template": '{"message":"{PROMPT}"}',
+            "max_requests_per_minute": 60,
+        },
+        {
+            "type": "playwright",
+            "url": "http://chat.example/",
+            "selectors": {"prompt_input": "#prompt", "submit": "#send", "response": ".response"},
+            "max_requests_per_minute": 60,
+        },
+    ],
+)
+def test_remote_target_urls_require_https(target: dict[str, object]) -> None:
+    with pytest.raises(ValueError, match="must use HTTPS"):
+        TargetDefinition.model_validate({"name": "customer-target", "target": target})
+
+
+def test_loopback_http_target_is_allowed_for_local_development() -> None:
+    target = HttpTarget(
+        type="http",
+        url="http://127.0.0.1:8080/chat",
+        body_template='{"message":"{PROMPT}"}',
+        max_requests_per_minute=60,
+    )
+
+    assert target.url.host == "127.0.0.1"
+
+
+def test_validation_errors_do_not_echo_rejected_credentials() -> None:
+    with pytest.raises(ValueError) as captured:
+        HttpTarget(
+            type="http",
+            url="https://alice:topsecret@api.example/chat",
+            body_template='{"message":"{PROMPT}"}',
+            max_requests_per_minute=60,
+        )
+
+    message = str(captured.value)
+    assert "must not embed credentials" in message
+    assert "alice" not in message
+    assert "topsecret" not in message
+    assert "input_value" not in message
+
+
+def test_http_headers_reject_case_insensitive_duplicates() -> None:
+    with pytest.raises(ValueError, match="Duplicate HTTP header"):
+        HttpTarget(
+            type="http",
+            url="https://api.example/chat",
+            headers={"X-Trace": "one", "x-trace": "two"},
+            body_template='{"message":"{PROMPT}"}',
+            max_requests_per_minute=60,
+        )
+
+
+@pytest.mark.parametrize("name", ["Host", "Content-Length", "Transfer-Encoding"])
+def test_http_headers_cannot_override_adapter_managed_transport_fields(name: str) -> None:
+    with pytest.raises(ValueError, match="managed by the target adapter"):
+        HttpTarget(
+            type="http",
+            url="https://api.example/chat",
+            headers={name: "attacker.example"},
+            body_template='{"message":"{PROMPT}"}',
+            max_requests_per_minute=60,
         )
 
 
@@ -85,6 +241,7 @@ def test_invalid_json_response_path_fails_during_configuration_validation() -> N
             url="https://api.example/chat",
             body_template='{"message":"{PROMPT}"}',
             response_json_path="choices[message.content",
+            max_requests_per_minute=60,
         )
 
 
@@ -123,6 +280,7 @@ async def test_http_target_uses_timeout_and_bracketed_json_response_path(monkeyp
         body_template='{"message":"{PROMPT}"}',
         response_json_path="choices[0].message.content",
         timeout_seconds=12,
+        max_requests_per_minute=60,
     )
 
     target = _create_http_target(spec)
@@ -150,6 +308,7 @@ async def test_http_target_treats_custom_prompt_placeholder_as_literal_text() ->
         body_template='{"message":${PROMPT}}',
         prompt_placeholder="${PROMPT}",
         prompt_encoding="json_value",
+        max_requests_per_minute=60,
     )
     target = _create_http_target(spec)
     request = type("Request", (), {"converted_value": 'hello "world"'})()
@@ -211,6 +370,7 @@ async def test_playwright_authentication_steps_are_ordered_and_environment_backe
                 {"action": "click", "selector": "#continue"},
                 {"action": "wait_for", "selector": "#prompt", "state": "visible"},
             ],
+            "max_requests_per_minute": 60,
         }
     )
 
@@ -274,6 +434,7 @@ def test_identity_target_uses_configured_scope(monkeypatch: pytest.MonkeyPatch) 
             model="deployment-name",
             auth="identity",
             token_scope="https://ai.azure.com/.default",
+            max_requests_per_minute=60,
         )
     )
 
@@ -314,6 +475,7 @@ def test_identity_target_ignores_empty_azure_identity_variables(monkeypatch: pyt
             model="deployment",
             auth="identity",
             token_scope="https://ai.azure.com/.default",
+            max_requests_per_minute=60,
         )
     )
 

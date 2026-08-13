@@ -36,6 +36,8 @@ jobs:
           rta plan baseline-pyrit --config configs/redteam.yaml --json
           rta plan baseline-foundry --config configs/redteam.yaml --json
           rta plan custom-pyrit --config configs/redteam.yaml --json
+          rta plan --config configs/examples/api-redteam.yaml --json
+          rta plan --config configs/examples/ui-redteam.yaml --json
       - name: Check formatting
         run: python -m ruff format --check src tests configs/pyrit/initializer.py
       - name: Lint
@@ -53,11 +55,20 @@ jobs:
         run: docker compose build
       - name: Check native PyRIT entrypoint
         run: docker run --rm rta-redteam:local --help
+      - name: Check non-root dependencies and browser runtime
+        run: |
+          docker run --rm --entrypoint sh rta-redteam:local -c 'test "$(id -u)" != 0 && python -m pip check'
+          docker run --rm --entrypoint python rta-redteam:local -c 'from playwright.sync_api import sync_playwright; p = sync_playwright().start(); b = p.chromium.launch(headless=True); b.close(); p.stop()'
       - name: Validate both engines in the container without execution
         run: |
           docker compose --profile tools run --rm redteam validate --config configs/redteam.yaml
+          docker compose --profile tools run --rm redteam validate --config configs/examples/api-redteam.yaml
+          docker compose --profile tools run --rm redteam validate --config configs/examples/ui-redteam.yaml
           docker compose --profile tools run --rm redteam plan baseline-pyrit --config configs/redteam.yaml --json
           docker compose --profile tools run --rm redteam plan baseline-foundry --config configs/redteam.yaml --json
+          docker compose --profile tools run --rm redteam plan custom-pyrit --config configs/redteam.yaml --json
+          docker compose --profile tools run --rm redteam plan --config configs/examples/api-redteam.yaml --json
+          docker compose --profile tools run --rm redteam plan --config configs/examples/ui-redteam.yaml --json
       - name: Start shared Co-PyRIT service
         env:
           REDTEAM_SCOPE_APPROVED: "true"

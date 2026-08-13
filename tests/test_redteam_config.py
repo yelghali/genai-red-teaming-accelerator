@@ -25,6 +25,39 @@ def test_checked_in_configuration_selects_both_native_engines() -> None:
     assert config.targets["openai"].foundry_scan == "openai"
 
 
+def test_yaml_parse_errors_do_not_echo_source_secrets(tmp_path: Path) -> None:
+    source = tmp_path / "malformed.yaml"
+    source.write_text('authorization: "Bearer topsecret\n', encoding="utf-8")
+
+    with pytest.raises(
+        ValueError,
+        match=r"Could not parse red-team configuration .* at line \d+, column \d+",
+    ) as captured:
+        load_redteam_config(source)
+
+    assert "topsecret" not in str(captured.value)
+    assert captured.value.__cause__ is None
+
+
+def test_duplicate_yaml_keys_fail_without_echoing_source_values(tmp_path: Path) -> None:
+    source = tmp_path / "duplicate.yaml"
+    source.write_text(
+        'selected_test: "first-secret"\nselected_test: "second-secret"\n',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        ValueError,
+        match=r"Could not parse red-team configuration .* at line 2, column 1",
+    ) as captured:
+        load_redteam_config(source)
+
+    message = str(captured.value)
+    assert "first-secret" not in message
+    assert "second-secret" not in message
+    assert captured.value.__cause__ is None
+
+
 def test_offline_plans_show_native_delegation_and_count_semantics() -> None:
     config = load_redteam_config(ROOT / "configs/redteam.yaml")
 
@@ -33,8 +66,10 @@ def test_offline_plans_show_native_delegation_and_count_semantics() -> None:
     custom = build_plan(config, test_name="custom-pyrit")["delegation"]
 
     assert pyrit["native_api"] == "pyrit.registry.ScenarioRegistry.create_and_initialize_async"
+    assert pyrit["target"] == "foundry-openai"
     assert pyrit["objective_source"]["objectives_per_risk"] == 1
     assert pyrit["max_turns"] == 3
+    assert build_plan(config, test_name="baseline-pyrit")["labels"]["target"] == "openai"
     assert foundry["native_api"] == "azure.ai.projects.AIProjectClient.get_openai_client().evals"
     assert foundry["objective_count"] == "service_managed"
     assert foundry["attack_strategies"] == ["Base64", "Crescendo"]

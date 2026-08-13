@@ -9,9 +9,11 @@ This guide shows the shortest supported path for scanning three target types:
 | JSON HTTP API | `configs/examples/api-targets.yaml` | `configs/examples/api-redteam.yaml` | Native PyRIT |
 | Browser chat UI, including form login | `configs/examples/ui-targets.yaml` | `configs/examples/ui-redteam.yaml` | Native PyRIT + Playwright |
 
-Run every command from the repository root. `rta validate`, `rta list`, and `rta plan` are offline: they validate files
-and references but do not call a target or create a cloud evaluation. `rta run` sends real requests and therefore
-requires written authorization, target authentication, and `REDTEAM_SCOPE_APPROVED=true`.
+Run every command from the repository root. `rta validate` validates all referenced configuration files and
+cross-references, `rta list` lists the profiles in the selected YAML, and `rta plan` validates references and renders
+one exact delegation. All three are offline: they do not call a target or create a cloud evaluation. `rta run` sends
+real requests and therefore requires written authorization, target authentication, and
+`REDTEAM_SCOPE_APPROVED=true`.
 
 ## 1. Install once
 
@@ -59,34 +61,36 @@ Edit [configs/pyrit/targets.yaml](../configs/pyrit/targets.yaml). Each `openai` 
 - the API endpoint and deployment/model name;
 - `api: chat` or `api: responses`;
 - either identity authentication with a token scope, or an environment-backed API key;
-- a bounded `max_requests_per_minute`.
+- an explicit, bounded `max_requests_per_minute`; omission is rejected rather than treated as unlimited.
 
 Identity authentication, as used by the checked-in Foundry targets:
 
 ```yaml
-target:
-  type: openai
-  provider: foundry
-  endpoint: https://<account>.services.ai.azure.com/api/projects/<project>/openai/v1/
-  model: <deployment-name>
-  api: chat
-  auth: identity
-  token_scope: https://ai.azure.com/.default
+target: {
+   type: openai,
+   provider: foundry,
+   endpoint: "https://<account>.services.ai.azure.com/api/projects/<project>/openai/v1/",
+   model: "<deployment-name>",
+   api: chat,
+   auth: identity,
+   token_scope: "https://ai.azure.com/.default",
+   max_requests_per_minute: 12
+}
 ```
 
 API-key authentication for another OpenAI-compatible service:
 
 ```yaml
-target:
-  type: openai
-  provider: openai-compatible
-  endpoint: https://model.example.com/v1/
-  model: <model-name>
-  api: chat
-  auth: api_key
-  api_key:
-    source: env
-    name: TARGET_MODEL_API_KEY
+target: {
+   type: openai,
+   provider: openai-compatible,
+   endpoint: "https://model.example.com/v1/",
+   model: "<model-name>",
+   api: chat,
+   auth: api_key,
+   api_key: {source: env, name: TARGET_MODEL_API_KEY},
+   max_requests_per_minute: 12
+}
 ```
 
 The target name must match the `pyrit_target` binding in [configs/redteam.yaml](../configs/redteam.yaml). Select an
@@ -184,7 +188,8 @@ Replace every placeholder before execution. Structural validation does not prove
 1. In `scorer-model`, set the PyRIT helper model endpoint and model name.
 2. In `application-api`, set `url`, HTTP method, headers, body template, and response path.
 3. Keep sensitive headers as environment references. `prefix: "Bearer "` safely composes an Authorization value.
-4. Put `{PROMPT}` where the generated objective belongs in `body_template`.
+   The adapter derives `Host` and HTTP framing headers from the validated request; do not configure them manually.
+4. Put `{PROMPT}` exactly once where the generated objective belongs in `body_template`.
 5. Choose the matching `prompt_encoding`:
    - `json_string` inside a quoted JSON string;
    - `json_value` when the placeholder replaces an entire JSON value;
@@ -204,8 +209,10 @@ $env:TARGET_TENANT_KEY = "<target tenant key>"
 ```
 
 If the API does not use one of those headers, remove that header and its variable reference from the catalog.
+Do not embed a username or password in the target URL; the schema rejects URL user information. Keep signed URLs,
+API keys, and bearer tokens out of YAML as well, and use environment-backed headers instead.
 
-Validate and inspect the exact request plan before sending traffic:
+Validate the catalog and inspect the exact scan delegation before sending traffic:
 
 ```powershell
 rta validate --config configs/examples/api-redteam.yaml
@@ -286,16 +293,28 @@ Foundry cloud runs additionally produce:
 Local Python is simplest for interactive Azure CLI authentication and UI selector debugging. For container execution:
 
 ```powershell
-$env:REDTEAM_SCOPE_APPROVED = "true"
 docker compose build
 docker compose --profile tools run --rm redteam validate --config configs/redteam.yaml
 docker compose --profile tools run --rm redteam plan baseline-pyrit --config configs/redteam.yaml --json
+docker compose --profile tools run --rm redteam plan --config configs/examples/api-redteam.yaml --json
+docker compose --profile tools run --rm redteam plan --config configs/examples/ui-redteam.yaml --json
 ```
 
 Rebuild after changing checked-in configuration because the image copies the `configs` directory. Compose passes the
 environment variables used by the checked API/UI examples. If a catalog uses different variable names, add them to
 the Compose service environment. A local `az login` session is not copied into the container; use an approved workload
 identity or service principal for containerized Foundry access.
+
+After setting the target-specific environment variables and receiving approval, execute the matching path:
+
+```powershell
+$env:REDTEAM_SCOPE_APPROVED = "true"
+docker compose --profile tools run --rm redteam run baseline-pyrit --config configs/redteam.yaml
+docker compose --profile tools run --rm redteam run --config configs/examples/api-redteam.yaml
+docker compose --profile tools run --rm redteam run --config configs/examples/ui-redteam.yaml
+```
+
+Run only the approved target command; the three commands above are alternatives, not a batch.
 
 Start the loopback review UI with the shared data volume:
 
@@ -309,6 +328,9 @@ docker compose up -d --wait co-pyrit
   retention.
 - Placeholder endpoints and model names were replaced and independently verified.
 - Credentials exist only in the environment or an approved identity provider.
+- Target URLs contain no embedded credentials, signed query tokens, or other secret material.
+- Remote target URLs and Foundry project endpoints use HTTPS; plain HTTP is limited to loopback development targets.
+- Duplicate YAML keys are rejected; errors expose field or line/column context without echoing input values or source lines.
 - `rta plan` shows the intended target, objective source, techniques, and bounds.
 - The target is isolated from production data and side effects, or equivalent controls are documented.
 - Co-PyRIT remains bound to `127.0.0.1`.

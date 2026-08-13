@@ -3,14 +3,17 @@
 from __future__ import annotations
 
 import re
+from ipaddress import ip_address
 from pathlib import Path
 from typing import Annotated, Literal
 
-import yaml
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, TypeAdapter, field_validator, model_validator
+
+from genai_red_teaming_accelerator.config_io import load_yaml_document
 
 ProfileName = Annotated[str, Field(pattern=r"^[a-z][a-z0-9_-]{1,62}$")]
 EnvironmentName = Annotated[str, Field(pattern=r"^[A-Z_][A-Z0-9_]*$")]
+RequestRate = Annotated[int, Field(gt=0)]
 
 _SENSITIVE_HEADERS = {
     "authorization",
@@ -20,13 +23,23 @@ _SENSITIVE_HEADERS = {
     "cookie",
     "set-cookie",
 }
+_RESERVED_HEADERS = {
+    "connection",
+    "content-length",
+    "host",
+    "proxy-connection",
+    "te",
+    "trailer",
+    "transfer-encoding",
+    "upgrade",
+}
 _HEADER_NAME = r"^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$"
 
 
 class StrictModel(BaseModel):
     """Reject unknown fields so configuration mistakes fail early."""
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", hide_input_in_errors=True)
 
 
 class SecretRef(StrictModel):
@@ -47,6 +60,24 @@ class SecretRef(StrictModel):
 HeaderValue = str | SecretRef
 
 
+def _is_loopback_host(host: str) -> bool:
+    normalized = host.removeprefix("[").removesuffix("]").rstrip(".").casefold()
+    if normalized == "localhost" or normalized.endswith(".localhost"):
+        return True
+    try:
+        return ip_address(normalized).is_loopback
+    except ValueError:
+        return False
+
+
+def _validate_target_url(value: AnyHttpUrl) -> AnyHttpUrl:
+    if value.username is not None or value.password is not None:
+        raise ValueError("target URLs must not embed credentials; use an environment-backed secret")
+    if value.scheme != "https" and not _is_loopback_host(value.host):
+        raise ValueError("target URLs must use HTTPS unless the host is loopback")
+    return value
+
+
 def _response_path_segments(path: str) -> list[str]:
     raw = path.removeprefix("$")
     if raw.startswith("."):
@@ -63,10 +94,16 @@ def _response_path_segments(path: str) -> list[str]:
 
 
 def _validate_headers(headers: dict[str, HeaderValue]) -> None:
+    normalized_names: set[str] = set()
     for name, value in headers.items():
         normalized_name = name.casefold()
         if not re.fullmatch(_HEADER_NAME, name):
             raise ValueError(f"Invalid HTTP header name: {name!r}")
+        if normalized_name in normalized_names:
+            raise ValueError(f"Duplicate HTTP header name ignoring case: {name!r}")
+        normalized_names.add(normalized_name)
+        if normalized_name in _RESERVED_HEADERS:
+            raise ValueError(f"HTTP header '{name}' is managed by the target adapter and cannot be configured")
         if isinstance(value, str) and ("\r" in value or "\n" in value):
             raise ValueError(f"Header '{name}' cannot contain line breaks")
         sensitive = (
@@ -93,7 +130,12 @@ class OpenAITarget(StrictModel):
     headers: dict[str, HeaderValue] = Field(default_factory=dict)
     temperature: float | None = Field(default=None, ge=0, le=2)
     max_tokens: int | None = Field(default=None, gt=0)
-    max_requests_per_minute: int | None = Field(default=None, gt=0)
+    max_requests_per_minute: RequestRate
+
+    @field_validator("endpoint")
+    @classmethod
+    def validate_endpoint(cls, value: AnyHttpUrl) -> AnyHttpUrl:
+        return _validate_target_url(value)
 
     @model_validator(mode="after")
     def validate_auth(self) -> OpenAITarget:
@@ -117,16 +159,21 @@ class HttpTarget(StrictModel):
     method: Literal["GET", "POST", "PUT", "DELETE", "PATCH"] = "POST"
     headers: dict[str, HeaderValue] = Field(default_factory=dict)
     body_template: str = Field(min_length=1)
-    prompt_placeholder: str = "{PROMPT}"
+    prompt_placeholder: str = Field(default="{PROMPT}", min_length=1, max_length=128)
     prompt_encoding: Literal["json_string", "json_value", "url", "raw"] = "json_string"
     response_json_path: str | None = None
     timeout_seconds: float = Field(default=30.0, gt=0, le=300)
-    max_requests_per_minute: int | None = Field(default=None, gt=0)
+    max_requests_per_minute: RequestRate
+
+    @field_validator("url")
+    @classmethod
+    def validate_url(cls, value: AnyHttpUrl) -> AnyHttpUrl:
+        return _validate_target_url(value)
 
     @model_validator(mode="after")
     def validate_request(self) -> HttpTarget:
-        if self.prompt_placeholder not in self.body_template:
-            raise ValueError("prompt_placeholder must occur in body_template")
+        if self.body_template.count(self.prompt_placeholder) != 1:
+            raise ValueError("prompt_placeholder must occur exactly once in body_template")
         _validate_headers(self.headers)
         if self.response_json_path is not None:
             _response_path_segments(self.response_json_path)
@@ -188,7 +235,12 @@ class PlaywrightTarget(StrictModel):
     headless: bool = True
     timeout_ms: int = Field(default=30_000, gt=0, le=300_000)
     auth_steps: list[PlaywrightAuthAction] = Field(default_factory=list, max_length=32)
-    max_requests_per_minute: int | None = Field(default=None, gt=0)
+    max_requests_per_minute: RequestRate
+
+    @field_validator("url")
+    @classmethod
+    def validate_url(cls, value: AnyHttpUrl) -> AnyHttpUrl:
+        return _validate_target_url(value)
 
 
 TargetSpec = Annotated[OpenAITarget | HttpTarget | PlaywrightTarget, Field(discriminator="type")]
@@ -241,8 +293,5 @@ _CATALOG_ADAPTER = TypeAdapter(PyRITTargetCatalog)
 def load_pyrit_catalog(path: str | Path) -> PyRITTargetCatalog:
     """Load and strictly validate one native PyRIT target catalog."""
     source = Path(path).expanduser().resolve()
-    try:
-        document = yaml.safe_load(source.read_text(encoding="utf-8"))
-    except (OSError, yaml.YAMLError) as exc:
-        raise ValueError(f"Could not read PyRIT target catalog {source}: {exc}") from exc
+    document = load_yaml_document(source, kind="PyRIT target catalog")
     return _CATALOG_ADAPTER.validate_python(document)

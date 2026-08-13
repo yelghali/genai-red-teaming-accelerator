@@ -60,4 +60,5 @@ The Foundry cloud model-run API owns objective generation and does not accept th
 engine/setup combination fails validation. Foundry agentic tests use a separately reviewed taxonomy instead.
 
 Both paths require `REDTEAM_SCOPE_APPROVED=true` at execution time. Sensitive values must be environment references;
-do not put keys, bearer tokens, signed URLs, or cookies in YAML.
+do not put keys, bearer tokens, signed URLs, or cookies in YAML. Every native target requires an explicit
+`max_requests_per_minute`; remote targets and Foundry endpoints require HTTPS; and duplicate YAML keys are rejected.

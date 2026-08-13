@@ -104,6 +104,7 @@ def _labels(*, test_name: str, test: TestDefinition) -> dict[str, str]:
         {
             "engine": test.engine,
             "test": test_name,
+            "target": test.target,
             "setup": test.setup.type,
             "source": "red_teaming_accelerator",
         }

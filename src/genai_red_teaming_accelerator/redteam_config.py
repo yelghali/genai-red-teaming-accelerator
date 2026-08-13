@@ -5,8 +5,9 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Annotated, Literal
 
-import yaml
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, TypeAdapter, field_validator, model_validator
+
+from genai_red_teaming_accelerator.config_io import load_yaml_document
 
 ProfileName = Annotated[str, Field(pattern=r"^[a-z][a-z0-9_-]{1,62}$")]
 LabelKey = Annotated[str, Field(pattern=r"^[a-z][a-z0-9_.-]{0,62}$")]
@@ -64,7 +65,7 @@ _FOUNDRY_UNSUPPORTED = {"pair", "tap"}
 class StrictModel(BaseModel):
     """Reject unknown fields so misspelled security settings cannot be ignored."""
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", hide_input_in_errors=True)
 
 
 class PyRITRuntime(StrictModel):
@@ -258,10 +259,7 @@ _OBJECTIVE_ADAPTER = TypeAdapter(CustomObjectiveFile)
 
 
 def _load_yaml(path: Path, *, kind: str) -> object:
-    try:
-        return yaml.safe_load(path.read_text(encoding="utf-8"))
-    except (OSError, yaml.YAMLError) as exc:
-        raise ValueError(f"Could not read {kind} {path}: {exc}") from exc
+    return load_yaml_document(path, kind=kind)
 
 
 def load_redteam_config(path: str | Path) -> RedTeamConfig:

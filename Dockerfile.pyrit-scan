@@ -12,9 +12,11 @@ WORKDIR /app
 COPY pyproject.toml README.md LICENSE ./
 COPY src ./src
 
-RUN python -m pip install --no-cache-dir ".[foundry,playwright]" \
-    && playwright install --with-deps chromium \
-    && useradd --create-home --shell /usr/sbin/nologin accelerator \
+RUN python -m pip install --no-cache-dir ".[foundry,playwright]"
+
+RUN DEBIAN_FRONTEND=noninteractive playwright install --with-deps chromium
+
+RUN useradd --create-home --shell /usr/sbin/nologin accelerator \
     && chown -R accelerator:accelerator /app /ms-playwright
 
 RUN mkdir -p /data && chown accelerator:accelerator /data

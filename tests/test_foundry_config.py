@@ -58,6 +58,49 @@ def test_foundry_provider_names_are_not_an_enum() -> None:
     assert target.publisher == "Customer Publisher"
 
 
+def test_foundry_project_endpoint_rejects_and_redacts_embedded_credentials() -> None:
+    with pytest.raises(ValueError, match="must not embed credentials") as captured:
+        FoundryConfig(
+            project_endpoint="https://alice:topsecret@project.services.ai.azure.com/api/projects/example",
+            scans={
+                "customer-model": FoundryScan(
+                    target=FoundryModelTarget(
+                        type="model",
+                        provider="customer-provider",
+                        publisher="Customer Publisher",
+                        deployment="customer-deployment",
+                        model="customer-model",
+                        version="7",
+                    ),
+                    risk_categories=["violence"],
+                )
+            },
+        )
+
+    assert "alice" not in str(captured.value)
+    assert "topsecret" not in str(captured.value)
+
+
+def test_foundry_project_endpoint_requires_https() -> None:
+    with pytest.raises(ValueError, match="must use HTTPS"):
+        FoundryConfig(
+            project_endpoint="http://project.services.ai.azure.com/api/projects/example",
+            scans={
+                "customer-model": FoundryScan(
+                    target=FoundryModelTarget(
+                        type="model",
+                        provider="customer-provider",
+                        publisher="Customer Publisher",
+                        deployment="customer-deployment",
+                        model="customer-model",
+                        version="7",
+                    ),
+                    risk_categories=["violence"],
+                )
+            },
+        )
+
+
 def test_execution_requires_authorization_and_workload_consent(monkeypatch: pytest.MonkeyPatch) -> None:
     config = load_foundry_config(ROOT / "configs/foundry.yaml")
     monkeypatch.delenv("REDTEAM_SCOPE_APPROVED", raising=False)

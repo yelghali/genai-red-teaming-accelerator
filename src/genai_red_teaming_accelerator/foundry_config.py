@@ -6,8 +6,9 @@ import os
 from pathlib import Path
 from typing import Annotated, Literal
 
-import yaml
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, TypeAdapter, field_validator, model_validator
+
+from genai_red_teaming_accelerator.config_io import load_yaml_document
 
 ScanName = Annotated[str, Field(pattern=r"^[a-z][a-z0-9_-]{1,62}$")]
 EnvironmentName = Annotated[str, Field(pattern=r"^[A-Z_][A-Z0-9_]*$")]
@@ -67,7 +68,7 @@ _AGENTIC_RISKS = {"prohibited_actions", "task_adherence", "sensitive_data_leakag
 
 
 class StrictModel(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", hide_input_in_errors=True)
 
 
 class Authorization(StrictModel):
@@ -153,6 +154,15 @@ class FoundryConfig(StrictModel):
     poll_interval_seconds: int = Field(default=10, ge=2, le=300)
     scans: dict[ScanName, FoundryScan] = Field(min_length=1)
 
+    @field_validator("project_endpoint")
+    @classmethod
+    def validate_project_endpoint(cls, value: AnyHttpUrl) -> AnyHttpUrl:
+        if value.username is not None or value.password is not None:
+            raise ValueError("Foundry project endpoint must not embed credentials; use Azure identity")
+        if value.scheme != "https":
+            raise ValueError("Foundry project endpoint must use HTTPS")
+        return value
+
     @field_validator("scans")
     @classmethod
     def validate_scan_names(cls, value: dict[str, FoundryScan]) -> dict[str, FoundryScan]:
@@ -168,10 +178,7 @@ _CONFIG_ADAPTER = TypeAdapter(FoundryConfig)
 def load_foundry_config(path: str | Path) -> FoundryConfig:
     """Load one strict Foundry configuration document."""
     source = Path(path).expanduser().resolve()
-    try:
-        document = yaml.safe_load(source.read_text(encoding="utf-8"))
-    except (OSError, yaml.YAMLError) as exc:
-        raise ValueError(f"Could not read Foundry configuration {source}: {exc}") from exc
+    document = load_yaml_document(source, kind="Foundry configuration")
     return _CONFIG_ADAPTER.validate_python(document)
 
 

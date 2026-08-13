@@ -85,5 +85,6 @@ def test_selector_overrides_foundry_workload_from_shared_profile() -> None:
     assert scan.attack_strategies == ["Base64", "Crescendo"]
     assert scan.num_turns == 3
     assert foundry.call["labels"]["use_case"] == "baseline-safety"
+    assert foundry.call["labels"]["target"] == "openai"
     assert foundry.call["output_directory"] == (ROOT / "artifacts/foundry").resolve()
     assert foundry.call["wait"] is True
